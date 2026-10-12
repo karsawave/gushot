@@ -1,5 +1,6 @@
 // Self-test: runs the test configs and checks the expected result
-// (3 OK, 1 deliberate failure -> exit 1, plus a warning for the deliberate typo key).
+// (3 OK, 1 deliberate failure -> exit 1, plus a warning for the deliberate typo key),
+// plus a --check run of every example config in docs/ and demo/ so they cannot go stale.
 // Exits 0 when everything matches. Usage: node test/run.cjs
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -37,6 +38,16 @@ const cases = [
     const b = shot('config.test.json', 't03');
     return a.out.includes('t03_mobile.png (new)') && a.out.includes('Changed: 0, new: 1.')
       && b.out.includes('t03_mobile.png (unchanged)') && b.out.includes('Changed: 0, new: 0.') || a.out + b.out;
+  }],
+  ['docs and demo examples still run (--check)', () => {
+    const bad = ['docs/getting-started', 'docs/login', 'docs/annotations', 'demo'].map((dir) => {
+      const cfg = dir === 'demo' ? 'gushot.json' : 'example.json';
+      const r = spawnSync(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), cfg, '--check'], {
+        cwd: path.join(__dirname, '..', dir), encoding: 'utf8', env: { ...process.env, APP_PASSWORD: 'x', DEMO_PASSWORD: 'x' },
+      });
+      return r.status === 0 && !/WARN|PERINGATAN/.test(r.stdout + r.stderr) ? '' : `${dir}:\n${r.stdout}${r.stderr}`;
+    }).join('');
+    return bad === '' || bad;
   }],
 ];
 let bad = 0;
