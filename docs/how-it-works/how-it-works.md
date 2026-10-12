@@ -1,5 +1,7 @@
 # How GuShot works
 
+**English** · [Bahasa Indonesia](how-it-works.id.md)
+
 GuShot reads one JSON config and drives your installed Chrome or Edge through it. You never write browser code; you describe pages and steps, and GuShot turns them into PNG files.
 
 ## The whole run

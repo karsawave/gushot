@@ -10,6 +10,9 @@
 - Demo uses numbered steps in `01_login` and `03_new_order`; video and GIF re-recorded. The video's last scene now shows the four screenshots (it was blank), and the recorder lives in `demo/record/`.
 - CI runs the self-test on Ubuntu, Windows, and macOS.
 - `docs/`: six tutorials (how it works, first screenshots, login with OTP, blur/highlight/numbering, keeping screenshots current, AI agents) with flow diagrams and example configs that run against the demo app.
+- Indonesian versions of all tutorials (`docs/**/*.id.md`).
+- `GUSHOT_LANG` sets the terminal language; the old name `SHOT_LANG` still works.
+- GitHub issue templates for bug reports and feature ideas.
 - Browser lookup no longer relies on fixed paths: it uses `PROGRAMFILES`, `PROGRAMFILES(X86)`, and `LOCALAPPDATA` on Windows (any drive, per-user installs), `~/Applications` on macOS, and searches `PATH` everywhere. A relative `chrome` in the config resolves from the config file.
 
 ## 1.0.0 (2026-10-09)

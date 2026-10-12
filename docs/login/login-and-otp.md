@@ -1,5 +1,7 @@
 # 2. Logging in, with OTP
 
+**English** · [Bahasa Indonesia](login-and-otp.id.md)
+
 Most guide pages are behind a login. In this tutorial you log in once with a password from the environment, enter a one-time code that the app writes to a log file, and capture pages as the logged-in user.
 
 ## The login flow

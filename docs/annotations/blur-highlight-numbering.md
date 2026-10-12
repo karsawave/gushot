@@ -1,5 +1,7 @@
 # 3. Blur, hide, highlight, number
 
+**English** · [Bahasa Indonesia](blur-highlight-numbering.id.md)
+
 A guide screenshot has two jobs: show the reader where to look, and show nothing private. This tutorial covers the keys that do both.
 
 ## Which key to use

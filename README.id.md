@@ -19,7 +19,7 @@ GuShot (Guide User Shot) membuat screenshot untuk buku panduan aplikasi web. Hal
 - [Masalah umum](#masalah-umum)
 - [Berkontribusi](#berkontribusi)
 
-Tutorial langkah demi langkah, lengkap dengan contoh yang bisa dijalankan dan diagram alur, ada di [docs/](docs/README.md) (bahasa Inggris).
+Tutorial langkah demi langkah, lengkap dengan contoh yang bisa dijalankan dan diagram alur, ada di [docs/](docs/README.id.md).
 
 ## Kebutuhan
 

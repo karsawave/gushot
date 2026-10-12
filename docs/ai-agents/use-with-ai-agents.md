@@ -1,5 +1,7 @@
 # 5. Using it with an AI agent
 
+**English** · [Bahasa Indonesia](use-with-ai-agents.id.md)
+
 GuShot ships as an Agent Skill. With it installed, you ask an AI coding agent for screenshots in plain words, and the agent does the work of tutorials 1 to 4: it reads your app, writes the config, runs it, and checks the result.
 
 ## What the agent does

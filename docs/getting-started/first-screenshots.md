@@ -1,5 +1,7 @@
 # 1. Your first screenshots
 
+**English** · [Bahasa Indonesia](first-screenshots.id.md)
+
 In this tutorial you capture a login page at desktop and phone size. It takes about five minutes.
 
 ```mermaid

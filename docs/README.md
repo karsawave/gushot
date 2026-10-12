@@ -1,5 +1,7 @@
 # GuShot docs
 
+**English** · [Bahasa Indonesia](README.id.md)
+
 Tutorials, in the order you will probably need them. Each folder has the tutorial, a config you can run against the [demo app](../demo/) (no server needed), and the screenshots that config produces.
 
 | Tutorial | You will learn |

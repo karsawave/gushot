@@ -1,5 +1,7 @@
 # 4. Keeping screenshots current
 
+**English** · [Bahasa Indonesia](update-after-ui-change.id.md)
+
 The point of a config over manual screenshots is the second run. When the app changes, you rerun GuShot instead of retaking every image. This tutorial shows how to find what changed, update only those images, and catch broken selectors before they reach the guide.
 
 ## The update cycle
