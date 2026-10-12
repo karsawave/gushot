@@ -202,7 +202,7 @@ Use sample data from seeders, not real customer data. Blur anything personal any
 
 ## Indonesian
 
-Indonesian config keys (`buka`, `klik`, `sorot`, ...) work as aliases of the English ones, see [aliases-id.md](skills/guide-screenshots/references/aliases-id.md). `"lang": "id"` or `SHOT_LANG=id` switches the terminal messages to Indonesian.
+Indonesian config keys (`buka`, `klik`, `sorot`, ...) work as aliases of the English ones, see [aliases-id.md](skills/guide-screenshots/references/aliases-id.md). `"lang": "id"` or `GUSHOT_LANG=id` switches the terminal messages to Indonesian.
 
 ## Contributing
 

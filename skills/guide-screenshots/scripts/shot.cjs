@@ -10,7 +10,7 @@
  * Config keys are English; the Indonesian keys from v1 are accepted as aliases.
  * {{NAME}} in the config is replaced from the environment (e.g. passwords), so
  * secrets never live in the file. Output language: "lang" in config or
- * SHOT_LANG env, "en" (default) or "id".
+ * GUSHOT_LANG env (old name SHOT_LANG still works), "en" (default) or "id".
  */
 const fs = require('fs');
 const os = require('os');
@@ -65,7 +65,8 @@ const MSG = {
     done: (ok, bad, out) => `\nSelesai: ${ok} OK, ${bad} gagal. Hasil di ${out}`,
   },
 };
-let T = MSG[(process.env.SHOT_LANG || 'en').slice(0, 2)] || MSG.en;
+const ENV_LANG = process.env.GUSHOT_LANG || process.env.SHOT_LANG;
+let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
@@ -117,7 +118,7 @@ const raw = fs.readFileSync(configFile, 'utf8').replace(/\{\{(\w+)\}\}/g, (_, k)
   return JSON.stringify(process.env[k]).slice(1, -1);
 });
 const cfg = alias(JSON.parse(raw), ALIAS.root);
-if (!process.env.SHOT_LANG && cfg.lang) T = MSG[cfg.lang] || MSG.en;
+if (!ENV_LANG && cfg.lang) T = MSG[cfg.lang] || MSG.en;
 check(cfg, 'root');
 cfg.shots = (cfg.shots || []).map((s) => {
   const r = check(alias(s, ALIAS.shot), 'shot');

@@ -1,0 +1,25 @@
+name: Feature idea
+description: Something your user guide needs that GuShot cannot do yet.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Bahasa Indonesia juga boleh.
+  - type: textarea
+    id: need
+    attributes:
+      label: What your guide needs
+      description: Describe the screenshot you want and why, before any solution. A sketch or an example image from another guide helps.
+    validations:
+      required: true
+  - type: textarea
+    id: now
+    attributes:
+      label: What you do today
+      description: How you work around it now (manual editing, another tool, a `js` step, ...).
+  - type: textarea
+    id: idea
+    attributes:
+      label: Config you would like to write
+      description: Optional. How you imagine it in the config.
+      render: json

@@ -20,7 +20,7 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `delay` | extra ms before every capture (default 500) |
 | `headless` | `false` to watch the browser work |
 | `chrome` | browser executable path, absolute or relative to the config file. Without it: `CHROME_PATH`, then Chrome/Edge in the install folders from `PROGRAMFILES`, `PROGRAMFILES(X86)`, and `LOCALAPPDATA` (Windows) or `/Applications` and `~/Applications` (macOS), then `google-chrome`, `chromium`, `microsoft-edge`, `chrome`, or `msedge` anywhere on `PATH` |
-| `lang` | `en` / `id` terminal messages (or env `SHOT_LANG`) |
+| `lang` | `en` / `id` terminal messages (or env `GUSHOT_LANG`; the old name `SHOT_LANG` still works) |
 | `sessions` | `{ name: [steps...] }` login steps per role; run once, reused across shots |
 | `shots` | list of screenshots |
 

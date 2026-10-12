@@ -119,7 +119,7 @@ Selector memakai selector CSS biasa. Path di dalam config, seperti `out` dan `ot
 
 Semua kunci dan langkah, termasuk `select`, `press`, `scrollTo`, `hide`, `theme`, dan menjalankan perintah shell sebelum memotret: [REFERENCE.md](skills/guide-screenshots/references/REFERENCE.md) (bahasa Inggris). Contoh lengkap dengan OTP: [config.example.json](skills/guide-screenshots/assets/config.example.json).
 
-Kunci config juga bisa ditulis dalam bahasa Indonesia (`buka`, `klik`, `sorot`, ...): [daftar alias](skills/guide-screenshots/references/aliases-id.md). Tambahkan `"lang": "id"` (atau env `SHOT_LANG=id`) supaya pesan terminal berbahasa Indonesia.
+Kunci config juga bisa ditulis dalam bahasa Indonesia (`buka`, `klik`, `sorot`, ...): [daftar alias](skills/guide-screenshots/references/aliases-id.md). Tambahkan `"lang": "id"` (atau env `GUSHOT_LANG=id`) supaya pesan terminal berbahasa Indonesia.
 
 ## Menjalankan
 

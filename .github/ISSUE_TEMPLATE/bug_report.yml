@@ -1,0 +1,50 @@
+name: Bug report
+description: A shot fails, an image looks wrong, or GuShot crashes.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Bahasa Indonesia juga boleh.
+        Remove passwords, tokens, and real customer data from anything you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Config
+      description: The smallest config that shows the problem (the failing shot and the session it uses).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Terminal output
+      description: The full output of `node shot.cjs ...`, including any FAIL or WARN lines.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: "OS, Node version (`node --version`), browser and version, GuShot version"
+      placeholder: "Windows 11, Node 22.11, Chrome 141, GuShot 1.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How do you run it
+      options:
+        - Command line
+        - Claude Code plugin
+        - Another AI agent (say which in "What happened")
+    validations:
+      required: true
