@@ -426,11 +426,18 @@ async function capture(page, s) {
   const shots = cfg.shots.filter((s) => !filters.length || filters.some((t) => s.name.includes(t)));
   if (!shots.length) { console.log(T.noShots); return; }
 
-  const browser = await puppeteer.launch({
+  const launch = () => puppeteer.launch({
     executablePath: findChrome(),
     headless: cfg.headless ?? true,
     defaultViewport: VIEWPORT,
     acceptInsecureCerts: true,
+  });
+  // Chrome sometimes refuses its fresh temp profile ("already running", seen on Windows CI).
+  // One retry with a new profile fixes it; anything else is a real error.
+  const browser = await launch().catch(async (e) => {
+    if (!/already running/i.test(e.message)) throw e;
+    await sleep(1000);
+    return launch();
   });
   const pages = {}; // one logged-in tab per session, reused across shots
   const failed = [];

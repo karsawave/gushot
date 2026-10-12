@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Chrome is started once more when it refuses its fresh temporary profile ("browser is already running"), a hiccup seen on Windows.
+
 ## 1.1.0 (2026-10-13)
 
 - Numbered highlights: `"highlight": [{ "selector": "#save", "label": "1" }]` puts a numbered badge on the top-right corner of the red box, to match "click 1, then 2" in the guide. Plain selectors still work.
