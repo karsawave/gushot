@@ -23,7 +23,7 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | `jarak` | `padding` | ruang di sekitar `element` (px) |
 | `sembunyikan` | `hide` | selector yang disembunyikan |
 | `sorot` | `highlight` | beri kotak merah |
-| `sesiBaru` | `freshSession` | login ulang dulu |
+| `sesiBaru` | `freshSession` | buka ulang sesi di konteks browser baru dulu |
 | `buka` | `open` | buka halaman |
 | `ketik` + `teks` | `type` + `text` | ketik ke input |
 | `klik` | `click` | klik selector |

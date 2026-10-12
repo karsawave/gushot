@@ -42,7 +42,7 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `hide` | selectors to hide |
 | `highlight` | elements outlined with a red box (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen) |
 | `viewport` | size for this shot only (e.g. mobile) |
-| `freshSession` | `true` = log in again first (clean state) |
+| `freshSession` | `true` = start the session again in a new browser context first (clean state). With `keepLogin`, a still-valid saved login is reused instead of logging in |
 | `delay` | extra ms before capturing |
 
 ## Steps
