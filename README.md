@@ -26,6 +26,7 @@ Step-by-step tutorials with runnable examples and flow diagrams are in [docs/](d
 - Node.js 18 or newer
 - Google Chrome or Microsoft Edge. It is found in the usual install folders on any drive, per-user installs included, or anywhere on `PATH`; otherwise set `CHROME_PATH`
 - The web app you want to capture, running somewhere the browser can reach (usually a local dev server with sample data)
+- Only for `video` shots: [ffmpeg](https://ffmpeg.org/download.html) on `PATH`, or set `"ffmpeg"` in the config
 
 Works on Windows, macOS, and Linux.
 
@@ -214,6 +215,7 @@ demo/                       demo app, its config, and the screenshots/video it p
 docs/                       tutorials, each with a runnable example config
 test/                       self-test (no server needed)
 .claude-plugin/             Claude Code plugin manifests
+.github/                    CI workflow, issue templates, social preview image
 ```
 
 Run the self-test before sending changes:
@@ -222,7 +224,7 @@ Run the self-test before sending changes:
 node test/run.cjs
 ```
 
-It runs an English and an Indonesian config against a local page; each contains one failing shot and one misspelled key on purpose. CI runs the same test on every push. See [AGENTS.md](AGENTS.md) for the conventions and [CHANGELOG.md](CHANGELOG.md) for releases.
+It runs test configs against a local page and checks the results: English and Indonesian keys (each with one failing shot and one misspelled key on purpose), numbered highlights and notes, `scale`, `padding`, `--check`, the new/changed/unchanged report, `keepLogin`, `video` (the recording part is skipped when ffmpeg is not installed), and a `--check` run of every example in `docs/` and `demo/`. CI runs the same test on Ubuntu, Windows, and macOS for every push and pull request; changes to `main` need it to pass. See [AGENTS.md](AGENTS.md) for the conventions and [CHANGELOG.md](CHANGELOG.md) for releases. Bugs and ideas go in [issues](https://github.com/rombyar/gushot/issues/new/choose).
 
 ## License
 

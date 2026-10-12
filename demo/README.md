@@ -9,7 +9,7 @@ A fake orders app, "Kedai Orders", in a single HTML file, and the GuShot config 
 | [`app.html`](app.html) | the app: login, a 6-digit email code, a dashboard with customer data, and a "New order" modal |
 | [`gushot.json`](gushot.json) | the config that logs in and takes the four screenshots |
 | [`screenshots/`](screenshots/) | the result, committed so you can see it without running anything |
-| [`gushot-demo.mp4`](gushot-demo.mp4), [`gushot-demo.gif`](gushot-demo.gif) | a 30-second recording of the run |
+| [`gushot-demo.mp4`](gushot-demo.mp4), [`gushot-demo.gif`](gushot-demo.gif) | a 30-second recording of the run, shown in the main README |
 | [`record/`](record/) | the script that makes the video: `node demo/record/record.cjs` from the repo root (needs ffmpeg) |
 
 ## Run it

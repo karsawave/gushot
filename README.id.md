@@ -26,6 +26,7 @@ Tutorial langkah demi langkah, lengkap dengan contoh yang bisa dijalankan dan di
 - Node.js 18 atau lebih baru
 - Google Chrome atau Microsoft Edge. Dicari otomatis di folder instalasi biasa di drive mana pun, termasuk instalasi per-user, atau di mana saja di `PATH`; kalau tidak ketemu, isi `CHROME_PATH`
 - Aplikasi web yang mau dipotret, berjalan di alamat yang bisa dibuka browser (biasanya server lokal dengan data contoh)
+- Khusus shot `video`: [ffmpeg](https://ffmpeg.org/download.html) di `PATH`, atau isi `"ffmpeg"` di config
 
 Jalan di Windows, macOS, dan Linux.
 
@@ -212,6 +213,7 @@ demo/                       aplikasi demo, config-nya, serta screenshot dan vide
 docs/                       tutorial, masing-masing dengan contoh config yang bisa dijalankan
 test/                       uji mandiri (tidak butuh server)
 .claude-plugin/             manifest plugin Claude Code
+.github/                    workflow CI, template issue, gambar social preview
 ```
 
 Jalankan uji mandiri sebelum mengirim perubahan:
@@ -220,7 +222,7 @@ Jalankan uji mandiri sebelum mengirim perubahan:
 node test/run.cjs
 ```
 
-Uji ini menjalankan config berbahasa Inggris dan Indonesia terhadap halaman lokal; masing-masing sengaja berisi satu shot yang gagal dan satu kunci yang salah ketik. CI menjalankan uji yang sama setiap push. Aturan pengembangan ada di [AGENTS.md](AGENTS.md), riwayat rilis di [CHANGELOG.md](CHANGELOG.md).
+Uji ini menjalankan config uji terhadap halaman lokal lalu memeriksa hasilnya: kunci Inggris dan Indonesia (masing-masing sengaja berisi satu shot yang gagal dan satu kunci yang salah ketik), sorotan bernomor dan keterangan, `scale`, `padding`, `--check`, laporan new/changed/unchanged, `keepLogin`, `video` (bagian rekaman dilewati kalau ffmpeg tidak terpasang), serta `--check` untuk semua contoh di `docs/` dan `demo/`. CI menjalankan uji yang sama di Ubuntu, Windows, dan macOS setiap push dan pull request; perubahan ke `main` harus lulus uji ini. Aturan pengembangan ada di [AGENTS.md](AGENTS.md), riwayat rilis di [CHANGELOG.md](CHANGELOG.md). Laporan bug dan ide fitur lewat [issues](https://github.com/rombyar/gushot/issues/new/choose).
 
 ## Lisensi
 

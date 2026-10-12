@@ -58,7 +58,9 @@ const cases = [
     return r.status === 0 && r.out.includes('v01_open_form.mp4 (video)') && fs.statSync(f).size > 10000 || r.out;
   }],
   ['docs and demo examples still run (--check)', () => {
-    const bad = ['docs/getting-started', 'docs/login', 'docs/annotations', 'docs/video', 'demo'].map((dir) => {
+    const docs = fs.readdirSync(path.join(__dirname, '../docs'))
+      .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);
+    const bad = [...docs, 'demo'].map((dir) => {
       const cfg = dir === 'demo' ? 'gushot.json' : 'example.json';
       const r = spawnSync(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), cfg, '--check'], {
         cwd: path.join(__dirname, '..', dir), encoding: 'utf8', env: { ...process.env, APP_PASSWORD: 'x', DEMO_PASSWORD: 'x' },
