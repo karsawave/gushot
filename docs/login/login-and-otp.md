@@ -95,4 +95,6 @@ flowchart TD
     B -- yes --> E[Session cookie lost:<br/>check base URL, HTTP vs HTTPS, cookie domain]
 ```
 
+To skip the login and OTP on later runs, see `keepLogin` in [tutorial 6](../video/record-a-flow.md#skipping-the-login-on-every-run).
+
 Next: [3. Blur, hide, highlight, number](../annotations/blur-highlight-numbering.md)

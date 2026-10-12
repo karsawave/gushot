@@ -95,4 +95,6 @@ flowchart TD
     B -- ya --> E[Cookie sesi hilang:<br/>cek base URL, HTTP vs HTTPS, domain cookie]
 ```
 
+Supaya run berikutnya tidak perlu login dan OTP lagi, lihat `keepLogin` di [tutorial 6](../video/record-a-flow.id.md#tidak-perlu-login-setiap-kali-menjalankan).
+
 Berikutnya: [3. Blur, sembunyikan, sorot, beri nomor](../annotations/blur-highlight-numbering.id.md)

@@ -7,6 +7,7 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | Indonesia | English | Arti |
 |---|---|---|
 | `bahasa` | `lang` | bahasa pesan terminal |
+| `ingatLogin` | `keepLogin` | simpan login antar-run (menit) |
 | `skala` | `scale` | kerapatan piksel (`2` = tajam untuk cetak/PDF) |
 | `keluar` | `out` | folder hasil |
 | `blurSelalu` | `alwaysBlur` | selector yang selalu dikaburkan |
@@ -34,3 +35,4 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | `gulirKe` | `scrollTo` | gulir ke elemen |
 | `perintah` | `run` | jalankan perintah shell |
 | `otp`: `pola`, `ke`, `kirim`, `coba` | `otp`: `pattern`, `into`, `submit`, `tries` | isi OTP dari file |
+| `highlight`: `catatan` | `highlight`: `note` | teks keterangan di samping kotak sorot |

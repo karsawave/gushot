@@ -13,6 +13,10 @@
 - Indonesian versions of all tutorials (`docs/**/*.id.md`).
 - `GUSHOT_LANG` sets the terminal language; the old name `SHOT_LANG` still works.
 - GitHub issue templates for bug reports and feature ideas.
+- Callout notes: `"highlight": [{ "selector": "#save", "note": "Save here" }]` puts a short text box below the red box (above it near the bottom of the screen). Indonesian alias: `catatan`.
+- Video shots: `"video": "gif" | "mp4" | "webm" | true` records opening the page and every step, then holds on the highlights. Blur and hide apply to every frame, also after navigations. Needs ffmpeg (`"ffmpeg"` sets its path); a clear error otherwise.
+- `keepLogin` (minutes) saves each session's cookies and localStorage to `.gushot/` next to the config and reuses them on later runs, skipping the login and OTP. A saved login is used only if the session's last `wait` selector appears. The folder is git-ignored automatically. Indonesian alias: `ingatLogin`.
+- Tutorial 6: recording a flow as a video, and skipping the login.
 - Browser lookup no longer relies on fixed paths: it uses `PROGRAMFILES`, `PROGRAMFILES(X86)`, and `LOCALAPPDATA` on Windows (any drive, per-user installs), `~/Applications` on macOS, and searches `PATH` everywhere. A relative `chrome` in the config resolves from the config file.
 
 ## 1.0.0 (2026-10-09)

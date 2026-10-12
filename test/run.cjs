@@ -39,8 +39,26 @@ const cases = [
     return a.out.includes('t03_mobile.png (new)') && a.out.includes('Changed: 0, new: 1.')
       && b.out.includes('t03_mobile.png (unchanged)') && b.out.includes('Changed: 0, new: 0.') || a.out + b.out;
   }],
+  ['keepLogin: second run reuses the saved login', () => {
+    const dir = path.join(__dirname, '.gushot');
+    fs.rmSync(dir, { recursive: true, force: true });
+    const a = shot('config.keep.json');
+    const saved = fs.existsSync(path.join(dir, 'user.json')) && fs.readFileSync(path.join(dir, '.gitignore'), 'utf8').trim() === '*';
+    const b = shot('config.keep.json');
+    return a.status === 0 && !a.out.includes('saved login reused') && saved
+      && b.status === 0 && b.out.includes('session "user": saved login reused') || a.out + b.out;
+  }],
+  ['video: records a flow, clear error without ffmpeg', () => {
+    const missing = shot('config.noffmpeg.json');
+    if (missing.status !== 1 || !missing.out.includes('ffmpeg not found')) return missing.out;
+    if (spawnSync('ffmpeg', ['-version']).error) { console.log('     (ffmpeg not installed here, recording part skipped)'); return true; }
+    const f = path.join(__dirname, 'output', 'v01_open_form.mp4');
+    fs.rmSync(f, { force: true });
+    const r = shot('config.video.json');
+    return r.status === 0 && r.out.includes('v01_open_form.mp4 (video)') && fs.statSync(f).size > 10000 || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
-    const bad = ['docs/getting-started', 'docs/login', 'docs/annotations', 'demo'].map((dir) => {
+    const bad = ['docs/getting-started', 'docs/login', 'docs/annotations', 'docs/video', 'demo'].map((dir) => {
       const cfg = dir === 'demo' ? 'gushot.json' : 'example.json';
       const r = spawnSync(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), cfg, '--check'], {
         cwd: path.join(__dirname, '..', dir), encoding: 'utf8', env: { ...process.env, APP_PASSWORD: 'x', DEMO_PASSWORD: 'x' },

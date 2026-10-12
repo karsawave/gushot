@@ -26,7 +26,7 @@ flowchart TD
 ```json
 "alwaysBlur": [".customer", ".phone", ".contact"],
 "shots": [
-  { "name": "01_highlight_button", "session": "admin", "highlight": ["#new-order"] },
+  { "name": "01_highlight_button", "session": "admin", "highlight": [{ "selector": "#new-order", "note": "Start a new order here" }] },
   { "name": "02_hide_stats", "session": "admin", "hide": [".stats"], "blur": ["td:nth-child(4)"] },
   { "name": "03_numbered_form", "session": "admin",
     "steps": [{ "click": "#new-order" }, { "wait": ".modal" }],
@@ -45,9 +45,9 @@ cd docs/annotations
 APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.json
 ```
 
-## Satu kotak merah
+## Satu kotak merah, dengan keterangan
 
-`"highlight": ["#new-order"]` menggambar kotak merah di sekeliling tombol. Pakai ini saat panduan berkata "klik New order".
+`"highlight": ["#new-order"]` menggambar kotak merah di sekeliling tombol. Pakai ini saat panduan berkata "klik New order". Kalau ditulis sebagai objek, sorotan bisa membawa `note`: teks keterangan pendek di bawah kotak (di atasnya kalau kotak dekat bagian bawah layar), supaya gambar tetap bisa dipahami tanpa paragraf di sebelahnya.
 
 ![Tombol yang disorot](screenshots/01_highlight_button.png)
 
@@ -73,5 +73,7 @@ Teks panduan untuk gambar ini bisa berupa:
 - `alwaysBlur` cukup ditulis sekali di config; tidak perlu diulang di setiap shot.
 - Ganti warna kotak dengan `"highlightColor": "#2563eb"` dan kekuatan blur dengan `"blurStrength": 8`.
 - Label bisa berupa teks pendek apa saja: `"A"`, `"2a"`, `"✓"`.
+- Buat keterangan sesingkat mungkin. Label dan keterangan bisa digabung: `{ "selector": "#save", "label": "4", "note": "Simpan" }`.
+- Di config berbahasa Indonesia, kunci keterangan bisa ditulis `catatan`.
 
-Berikutnya: [4. Menjaga screenshot tetap terbaru](../maintenance/update-after-ui-change.id.md)
+Berikutnya: [4. Menjaga screenshot tetap terbaru](../maintenance/update-after-ui-change.id.md). Untuk memperlihatkan alur saat berlangsung, lihat [6. Merekam alur sebagai video](../video/record-a-flow.id.md).

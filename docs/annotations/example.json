@@ -14,7 +14,7 @@
     ]
   },
   "shots": [
-    { "name": "01_highlight_button", "session": "admin", "highlight": ["#new-order"] },
+    { "name": "01_highlight_button", "session": "admin", "highlight": [{ "selector": "#new-order", "note": "Start a new order here" }] },
     { "name": "02_hide_stats", "session": "admin", "hide": [".stats"], "blur": ["td:nth-child(4)"] },
     { "name": "03_numbered_form", "session": "admin",
       "steps": [{ "click": "#new-order" }, { "wait": ".modal" }],

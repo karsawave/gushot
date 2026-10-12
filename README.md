@@ -97,11 +97,12 @@ What you will use most:
 
 | In a shot | Does |
 |---|---|
-| `highlight` | draws a red box around the elements a guide step talks about; `{ "selector": "#save", "label": "2" }` adds a numbered badge |
+| `highlight` | draws a red box around the elements a guide step talks about; `{ "selector": "#save", "label": "2", "note": "Save here" }` adds a numbered badge and a short callout |
 | `blur` | blurs extra elements in this shot (`alwaysBlur` does it for every shot) |
 | `element` | captures only one element, such as a modal or a form; add `"padding": 16` to keep some of the page around it |
 | `fullPage` | captures the whole scrolling page |
 | `viewport` | uses another size for this shot, e.g. `{ "width": 390, "height": 844 }` for a phone |
+| `video` | records the shot's steps as `"gif"`, `"mp4"`, or `"webm"` instead of a PNG (needs ffmpeg) |
 
 | Step | Example |
 |---|---|
@@ -133,6 +134,7 @@ node <path-to>/shot.cjs my-guide.json --check     # run the steps, save nothing
 - Exit code: `0` all shots OK, `1` at least one failed, `2` the dependency is not installed.
 - `--check` runs every step but saves no images. Use it after a UI change, or in CI, to find broken selectors early.
 - `"scale": 2` in the config gives double-resolution images that stay sharp in a PDF or on a HiDPI screen.
+- `"keepLogin": 60` in the config keeps each session's login for 60 minutes, so later runs skip the login and OTP. It is saved in `.gushot/` next to the config, which is git-ignored automatically.
 - Add `"headless": false` to the config to watch the browser while it works.
 
 ## Using it with an AI agent

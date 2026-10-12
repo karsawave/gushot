@@ -19,6 +19,8 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `css` | extra CSS while capturing (e.g. hide a debug bar) |
 | `delay` | extra ms before every capture (default 500) |
 | `headless` | `false` to watch the browser work |
+| `keepLogin` | minutes to keep a session's login between runs, e.g. `60`. After logging in, cookies and localStorage are saved to `.gushot/<session>.json` next to the config (the folder gets its own `.gitignore`); the next run restores them and skips the login and OTP. A saved login is used only if the session's last `wait` selector appears, otherwise it is deleted and the session logs in normally. Only works for apps that keep the login in cookies or localStorage. The file holds live session cookies: do not enable it on shared machines, delete `.gushot/` to force a fresh login |
+| `ffmpeg` | path to ffmpeg for `video` shots, absolute or relative to the config file (default: `ffmpeg` on `PATH`) |
 | `chrome` | browser executable path, absolute or relative to the config file. Without it: `CHROME_PATH`, then Chrome/Edge in the install folders from `PROGRAMFILES`, `PROGRAMFILES(X86)`, and `LOCALAPPDATA` (Windows) or `/Applications` and `~/Applications` (macOS), then `google-chrome`, `chromium`, `microsoft-edge`, `chrome`, or `msedge` anywhere on `PATH` |
 | `lang` | `en` / `id` terminal messages (or env `GUSHOT_LANG`; the old name `SHOT_LANG` still works) |
 | `sessions` | `{ name: [steps...] }` login steps per role; run once, reused across shots |
@@ -32,12 +34,13 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `session` | session name; empty = guest |
 | `url` | page to open |
 | `steps` | actions before capturing (click a button, open a modal, fill a form) |
+| `video` | record the shot instead of a PNG: `true` or `"mp4"`, `"gif"` (loops), `"webm"`. Records opening `url` and every step, with a short pause after each, then holds on the `highlight` boxes. `alwaysBlur`, `blur`, and `hide` apply to every frame. Saved as `<name>.<format>`. Needs ffmpeg. `element`, `padding`, and `fullPage` do not apply |
 | `element` | capture only this element (e.g. a modal) |
 | `padding` | with `element`: px of surrounding page to include on each side, e.g. `16` |
 | `fullPage` | `true` = whole page, not just the viewport |
 | `blur` | extra selectors to blur |
 | `hide` | selectors to hide |
-| `highlight` | elements outlined with a red box (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]` |
+| `highlight` | elements outlined with a red box (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen) |
 | `viewport` | size for this shot only (e.g. mobile) |
 | `freshSession` | `true` = log in again first (clean state) |
 | `delay` | extra ms before capturing |
@@ -66,6 +69,7 @@ OTP: the code is capture group 1 of the last `pattern` match written to `file` a
 ## Output and exit codes
 
 - One line per shot: `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>` (`GAGAL` with `lang: id`), then a summary and `Changed: X, new: Y.` The state compares the file with the one it replaces, so after a rerun you know which images to update in the guide.
+- A `video` shot prints `OK <file> (video)`; videos are not compared with the previous file.
 - `WARN unknown key "x"` (`PERINGATAN` with `lang: id`): a config key the tool does not know, most likely a typo; it is ignored. Keys starting with `_` or `$` are allowed for comments.
 - `--check` anywhere on the command line runs every step and checks that `element` exists, but saves no images. Use it after UI changes, or in CI, to find broken selectors.
 - Exit 0 = all OK, 1 = at least one shot failed (others still run), 2 = dependency missing.

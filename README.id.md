@@ -97,11 +97,12 @@ Yang paling sering dipakai:
 
 | Di dalam shot | Fungsi |
 |---|---|
-| `highlight` | memberi kotak merah pada elemen yang dibahas di langkah panduan; `{ "selector": "#save", "label": "2" }` menambah nomor langkah |
+| `highlight` | memberi kotak merah pada elemen yang dibahas di langkah panduan; `{ "selector": "#save", "label": "2", "note": "Simpan di sini" }` menambah nomor langkah dan teks keterangan |
 | `blur` | mem-blur elemen tambahan di shot ini (`alwaysBlur` berlaku untuk semua shot) |
 | `element` | memotret satu elemen saja, misalnya modal atau form; tambahkan `"padding": 16` supaya sebagian halaman di sekitarnya ikut terlihat |
 | `fullPage` | memotret seluruh halaman sampai bawah |
 | `viewport` | ukuran layar khusus shot ini, misalnya `{ "width": 390, "height": 844 }` untuk HP |
+| `video` | merekam langkah shot sebagai `"gif"`, `"mp4"`, atau `"webm"`, bukan PNG (butuh ffmpeg) |
 
 | Langkah | Contoh |
 |---|---|
@@ -135,6 +136,7 @@ node <path>/shot.cjs panduan.json --check     # jalankan langkah, tanpa menyimpa
 - Kode keluar: `0` semua OK, `1` ada yang gagal, `2` dependensi belum dipasang.
 - `--check` menjalankan semua langkah tanpa menyimpan gambar. Pakai setelah tampilan berubah, atau di CI, untuk menemukan selector yang rusak lebih awal.
 - `"scale": 2` di config menghasilkan gambar resolusi ganda yang tetap tajam di PDF atau layar HiDPI.
+- `"keepLogin": 60` di config menyimpan login tiap sesi selama 60 menit, jadi run berikutnya tidak perlu login dan OTP lagi. Disimpan di `.gushot/` di samping config, yang otomatis diabaikan git.
 - Tambahkan `"headless": false` di config untuk melihat browser saat bekerja.
 
 ## Dipakai lewat agen AI

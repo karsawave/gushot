@@ -1,0 +1,27 @@
+{
+  "out": "videos",
+  "viewport": { "width": 900, "height": 560 },
+  "alwaysBlur": [".customer", ".phone", ".contact"],
+  "sessions": {
+    "admin": [
+      { "open": "../../demo/app.html" },
+      { "type": "#email", "text": "rina@kedai.example" },
+      { "type": "#password", "text": "{{APP_PASSWORD}}" },
+      { "click": "#login button" },
+      { "run": "node -e \"require('fs').appendFileSync('mail.log','Your Kedai code: 482913\\n')\"" },
+      { "otp": { "file": "mail.log", "pattern": "Kedai code: (\\d{6})", "into": "#code", "submit": { "clickText": "Verify" } } },
+      { "wait": "#app" }
+    ]
+  },
+  "shots": [
+    { "name": "new_order", "session": "admin", "video": "gif",
+      "steps": [
+        { "click": "#new-order" },
+        { "wait": ".modal" },
+        { "type": "#cust", "text": "Walk-in customer" },
+        { "select": "#menu", "value": "Mie ayam" },
+        { "type": "#qty", "text": "2" }
+      ],
+      "highlight": [{ "selector": ".modal .primary", "note": "Last step: save the order" }] }
+  ]
+}

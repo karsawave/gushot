@@ -16,7 +16,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const crypto = require('crypto');
 let puppeteer;
 try {
@@ -41,6 +41,9 @@ const MSG = {
     noSession: (n) => `session "${n}" is not defined in the config`,
     noElement: (s) => `element ${s} not found`,
     unknownKey: (k) => `WARN unknown key "${k}" (typo?), ignored`,
+    reusedLogin: (n) => `      (session "${n}": saved login reused)`,
+    noFfmpeg: 'ffmpeg not found (needed for "video"): install it, or set "ffmpeg" in the config to its path',
+    video: 'video',
     noShots: 'No matching shots.',
     ok: 'OK   ', fail: 'FAIL ', checked: (n) => `${n} (checked, not saved)`,
     state: { new: 'new', changed: 'changed', same: 'unchanged' },
@@ -58,6 +61,9 @@ const MSG = {
     noSession: (n) => `sesi "${n}" tidak ada di konfigurasi`,
     noElement: (s) => `elemen ${s} tidak ada`,
     unknownKey: (k) => `PERINGATAN key "${k}" tidak dikenal (salah ketik?), diabaikan`,
+    reusedLogin: (n) => `      (sesi "${n}": login tersimpan dipakai ulang)`,
+    noFfmpeg: 'ffmpeg tidak ditemukan (dibutuhkan "video"): pasang ffmpeg, atau isi "ffmpeg" di konfigurasi dengan path-nya',
+    video: 'video',
     noShots: 'Tidak ada shot yang cocok.',
     ok: 'OK   ', fail: 'GAGAL', checked: (n) => `${n} (diperiksa, tidak disimpan)`,
     state: { new: 'baru', changed: 'berubah', same: 'sama' },
@@ -70,7 +76,7 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
-  root: { skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
+  root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
     jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay' },
@@ -78,6 +84,7 @@ const ALIAS = {
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
     gulirKe: 'scrollTo', perintah: 'run' },
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
+  highlight: { catatan: 'note' },
 };
 const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
   ? Object.fromEntries(Object.entries(o).map(([k, v]) => [map[k] || k, v])) : o);
@@ -85,11 +92,11 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang sessions shots',
-  shot: 'name session url steps element padding fullPage blur hide highlight viewport freshSession delay',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang sessions shots',
+  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay',
   step: 'open type text click clickText within select value press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
-  highlight: 'selector label',
+  highlight: 'selector label note',
 };
 const warned = new Set();
 const check = (o, kind) => {
@@ -123,8 +130,9 @@ check(cfg, 'root');
 cfg.shots = (cfg.shots || []).map((s) => {
   const r = check(alias(s, ALIAS.shot), 'shot');
   r.steps = (r.steps || []).map(step);
-  // "#save" or { "selector": "#save", "label": "1" } (numbered badge for "click 1, then 2").
-  r.highlight = (r.highlight || []).map((h) => (typeof h === 'string' ? { selector: h } : check(h, 'highlight')));
+  // "#save" or { "selector": "#save", "label": "1", "note": "Click to save" }
+  // (numbered badge for "click 1, then 2"; note = short callout text next to the box).
+  r.highlight = (r.highlight || []).map((h) => (typeof h === 'string' ? { selector: h } : check(alias(h, ALIAS.highlight), 'highlight')));
   return r;
 });
 for (const n of Object.keys(cfg.sessions || {})) cfg.sessions[n] = cfg.sessions[n].map(step);
@@ -216,11 +224,56 @@ async function fillOtp(page, o) {
   if (o.submit) await run(page, typeof o.submit === 'string' ? { click: o.submit } : o.submit);
 }
 
-async function newSession(browser, name) {
+async function newPage(browser) {
   const page = await (await browser.createBrowserContext()).newPage();
   if (cfg.theme) await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: cfg.theme }]);
+  return page;
+}
+
+// keepLogin (minutes): after a login, cookies + localStorage go to <config folder>/.gushot/<session>.json
+// so the next run can skip the login and OTP. The folder gets its own .gitignore. A saved login is
+// only trusted if the session's last `wait` selector shows up; otherwise it is deleted and the
+// session logs in normally.
+const loginFile = (name) => path.join(configDir, '.gushot', `${name}.json`);
+const verifySelector = (steps) => [...steps].reverse().find((x) => typeof x.wait === 'string')?.wait;
+
+async function restoreLogin(page, name, steps) {
+  const file = loginFile(name), verify = verifySelector(steps);
+  if (!cfg.keepLogin || !verify || !fs.existsSync(file)) return false;
+  try {
+    const saved = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (Date.now() - saved.savedAt > cfg.keepLogin * 60000) throw new Error('expired');
+    if (saved.cookies.length) await page.browserContext().setCookie(...saved.cookies);
+    await page.goto(saved.url, { waitUntil: 'networkidle2' });
+    if (Object.keys(saved.storage).length) {
+      await page.evaluate((st) => Object.entries(st).forEach(([k, v]) => localStorage.setItem(k, v)), saved.storage);
+      await page.reload({ waitUntil: 'networkidle2' });
+    }
+    await page.waitForSelector(verify, { visible: true, timeout: 5000 });
+    console.log(T.reusedLogin(name));
+    return true;
+  } catch {
+    fs.rmSync(file, { force: true });
+    return false;
+  }
+}
+
+async function saveLogin(page, name, steps) {
+  if (!cfg.keepLogin || !verifySelector(steps)) return;
+  const dir = path.dirname(loginFile(name));
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, '.gitignore'), '*\n');
+  const storage = await page.evaluate(() => ({ ...localStorage })).catch(() => ({}));
+  const data = { savedAt: Date.now(), url: page.url(), cookies: await page.browserContext().cookies(), storage };
+  fs.writeFileSync(loginFile(name), JSON.stringify(data), { mode: 0o600 });
+}
+
+async function newSession(browser, name) {
+  let page = await newPage(browser);
   const steps = name ? cfg.sessions?.[name] : null;
   if (name && !steps) throw new Error(T.noSession(name));
+  if (name && await restoreLogin(page, name, steps)) return page;
+  if (name && cfg.keepLogin) { await page.browserContext().close(); page = await newPage(browser); } // clean slate after a failed restore
   const otpFile = (steps || []).find((x) => x.otp)?.otp.file;
   for (const l of steps || []) {
     // Mark the OTP file size before each trigger step so old codes are ignored.
@@ -230,28 +283,20 @@ async function newSession(browser, name) {
     }
     await run(page, l);
   }
+  if (name) await saveLogin(page, name, steps);
   return page;
 }
 
 const outFile = (s) => path.join(OUT, s.name.endsWith('.png') ? s.name : `${s.name}.png`);
 const hashOf = (f) => (fs.existsSync(f) ? crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex') : null);
 
-async function capture(page, s) {
-  await settle(page, 600);
-  await sleep(s.delay ?? cfg.delay ?? 500);
-  const blur = [...(cfg.alwaysBlur || []), ...(s.blur || [])];
-  const css = [];
-  if (blur.length) css.push(`${blur.join(',')}{filter:blur(${cfg.blurStrength ?? 6}px)!important}`);
-  if (s.hide?.length) css.push(`${s.hide.join(',')}{visibility:hidden!important}`);
-  if (cfg.css) css.push(cfg.css);
-  const tag = css.length ? await page.addStyleTag({ content: css.join('\n') }) : null;
-
-  // Highlight (red box, optional numbered badge) the elements a guide step refers to.
-  if (s.highlight.length) {
-    await page.evaluate((hl, color) => hl.forEach(({ selector, label }) => document.querySelectorAll(selector).forEach((e) => {
-      e.dataset.shotOutline = e.style.outline; e.style.outline = `3px solid ${color}`; e.style.outlineOffset = '3px';
-      if (label === undefined) return;
-      const r = e.getBoundingClientRect();
+// Highlight (red box, optional numbered badge and callout note) the elements a guide step refers to.
+async function annotate(page, s) {
+  if (!s.highlight.length) return;
+  await page.evaluate((hl, color) => hl.forEach(({ selector, label, note }) => document.querySelectorAll(selector).forEach((e) => {
+    e.dataset.shotOutline = e.style.outline; e.style.outline = `3px solid ${color}`; e.style.outlineOffset = '3px';
+    const r = e.getBoundingClientRect();
+    if (label !== undefined) {
       const b = document.createElement('div');
       b.className = 'gushot-label';
       b.textContent = label;
@@ -259,8 +304,96 @@ async function capture(page, s) {
         + `min-width:24px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:12px;background:${color};color:#fff;`
         + 'font:700 13px/24px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff';
       document.body.appendChild(b);
-    })), s.highlight, cfg.highlightColor || '#e11d48');
+    }
+    if (note) {
+      // Below the box, or above it when there is no room; kept inside the viewport horizontally.
+      const n = document.createElement('div');
+      n.className = 'gushot-label';
+      n.textContent = note;
+      n.style.cssText = 'position:absolute;z-index:2147483647;max-width:260px;padding:6px 10px;border-radius:6px;'
+        + `background:#111827;color:#fff;border-left:3px solid ${color};font:500 13px/1.4 system-ui,sans-serif;`
+        + 'box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:normal';
+      document.body.appendChild(n);
+      const below = r.bottom + 14 + n.offsetHeight <= innerHeight;
+      const left = Math.max(8, Math.min(r.left, innerWidth - n.offsetWidth - 8));
+      n.style.left = `${left + scrollX}px`;
+      n.style.top = `${(below ? r.bottom + 14 : r.top - 14 - n.offsetHeight) + scrollY}px`;
+    }
+  })), s.highlight, cfg.highlightColor || '#e11d48');
+}
+
+async function unannotate(page, s) {
+  if (!s.highlight.length) return;
+  await page.evaluate((hl) => {
+    hl.forEach(({ selector }) => document.querySelectorAll(selector).forEach((e) => {
+      e.style.outline = e.dataset.shotOutline || ''; e.style.outlineOffset = '';
+    }));
+    document.querySelectorAll('.gushot-label').forEach((b) => b.remove());
+  }, s.highlight);
+}
+
+// blur + hide + extra css for one shot.
+function shotCss(s) {
+  const blur = [...(cfg.alwaysBlur || []), ...(s.blur || [])];
+  const css = [];
+  if (blur.length) css.push(`${blur.join(',')}{filter:blur(${cfg.blurStrength ?? 6}px)!important}`);
+  if (s.hide?.length) css.push(`${s.hide.join(',')}{visibility:hidden!important}`);
+  if (cfg.css) css.push(cfg.css);
+  return css.join('\n');
+}
+
+// video: true | "mp4" | "gif" | "webm". Records the shot's url + steps (with a pause after each
+// step so viewers can follow), then holds on the highlights. Needs ffmpeg.
+async function record(page, s) {
+  const fmt = s.video === true ? 'mp4' : s.video;
+  const ffmpeg = cfg.ffmpeg ? path.resolve(configDir, cfg.ffmpeg) : 'ffmpeg';
+  if (spawnSync(ffmpeg, ['-version']).error) throw new Error(T.noFfmpeg);
+  const file = path.join(OUT, `${s.name}.${fmt}`);
+  // Blur must be on every frame, also right after a navigation, so the style is added as soon as
+  // each new document exists. The 1px dot changes color all the time so the screencast keeps
+  // sending frames while the page is still (it only sends frames on repaint; an opacity animation
+  // runs on the GPU without a repaint, so it would not help).
+  const inject = (css) => {
+    const add = () => {
+      const st = document.createElement('style');
+      st.className = 'gushot-video';
+      st.textContent = `${css}\n@keyframes gushot-tick{to{background:rgba(127,127,127,.03)}}`;
+      const dot = document.createElement('div');
+      dot.className = 'gushot-video';
+      dot.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;background:rgba(127,127,127,.02);'
+        + 'pointer-events:none;z-index:2147483647;animation:gushot-tick .2s steps(2) infinite alternate';
+      document.documentElement.append(st, dot);
+    };
+    if (document.documentElement) add();
+    else new MutationObserver((m, o) => { if (document.documentElement) { o.disconnect(); add(); } }).observe(document, { childList: true });
+  };
+  const css = shotCss(s);
+  const { identifier } = await page.evaluateOnNewDocument(inject, css);
+  await page.evaluate(inject, css);
+  const rec = await page.screencast({ path: file, format: fmt, ffmpegPath: ffmpeg, ...(fmt === 'gif' ? { loop: Infinity } : {}) });
+  try {
+    await sleep(800);
+    if (s.url) await page.goto(absUrl(s.url), { waitUntil: 'networkidle2' });
+    for (const l of s.steps) { await run(page, l); await sleep(700); }
+    await settle(page, 600);
+    await annotate(page, s);
+    await sleep(2500); // hold on the result; the screencast also lags a little behind the page
+  } finally {
+    await rec.stop();
+    await unannotate(page, s).catch(() => {});
+    await page.removeScriptToEvaluateOnNewDocument(identifier);
+    await page.evaluate(() => document.querySelectorAll('.gushot-video').forEach((e) => e.remove())).catch(() => {});
   }
+  return file;
+}
+
+async function capture(page, s) {
+  await settle(page, 600);
+  await sleep(s.delay ?? cfg.delay ?? 500);
+  const css = shotCss(s);
+  const tag = css ? await page.addStyleTag({ content: css }) : null;
+
+  await annotate(page, s);
 
   const file = outFile(s);
   if (s.element) {
@@ -282,14 +415,7 @@ async function capture(page, s) {
     await page.screenshot({ path: file, fullPage: !!s.fullPage });
   }
 
-  if (s.highlight.length) {
-    await page.evaluate((hl) => {
-      hl.forEach(({ selector }) => document.querySelectorAll(selector).forEach((e) => {
-        e.style.outline = e.dataset.shotOutline || ''; e.style.outlineOffset = '';
-      }));
-      document.querySelectorAll('.gushot-label').forEach((b) => b.remove());
-    }, s.highlight);
-  }
+  await unannotate(page, s);
   if (tag) await tag.evaluate((t) => t.remove());
   return file;
 }
@@ -317,6 +443,12 @@ async function capture(page, s) {
       pages[key] ||= await newSession(browser, s.session);
       const page = pages[key];
       if (s.viewport) await page.setViewport({ ...VIEWPORT, ...s.viewport });
+      if (s.video && !CHECK) {
+        const file = await record(page, s);
+        console.log(T.ok, path.relative(process.cwd(), file), `(${T.video})`);
+        if (s.viewport) await page.setViewport(VIEWPORT);
+        continue;
+      }
       if (s.url) await page.goto(absUrl(s.url), { waitUntil: 'networkidle2' });
       for (const l of s.steps) await run(page, l);
       const before = hashOf(outFile(s));

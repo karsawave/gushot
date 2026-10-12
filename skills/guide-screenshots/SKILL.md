@@ -28,8 +28,8 @@ Do not capture screenshots by hand through a browser tool and do not write a new
 
 ## Key summary
 
-Root: `base`, `scale` (2 = sharp for PDF/print), `out`, `viewport`, `theme`, `alwaysBlur`, `css`, `delay`, `sessions` ({ name: [steps] }), `shots`.
-Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label }` for a numbered badge matching the guide's step numbers), `viewport`, `freshSession`, `delay`.
+Root: `base`, `scale` (2 = sharp for PDF/print), `keepLogin` (minutes; skip login/OTP on later runs), `ffmpeg`, `out`, `viewport`, `theme`, `alwaysBlur`, `css`, `delay`, `sessions` ({ name: [steps] }), `shots`.
+Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label, note }`: numbered badge matching the guide's step numbers, short callout text), `video` (`true`/`"gif"`/`"webm"`: record url + steps instead of a PNG; needs ffmpeg), `viewport`, `freshSession`, `delay`.
 Steps: `open`, `type`+`text`, `click`, `clickText` (+`within`), `select`+`value`, `press`, `wait` (ms or selector), `waitText`, `scrollTo`, `js`, `run` (+`cwd`), `otp` { `file`, `pattern` (regex, group 1 = code), `into`, `submit` }.
 
 ## Workflow
@@ -39,7 +39,7 @@ Steps: `open`, `type`+`text`, `click`, `clickText` (+`within`), `select`+`value`
 2. **Learn the login flow from the code, do not guess:** login page, input selectors, whether there is 2FA/OTP, where the OTP is written in local dev (log/mail log), login rate limits (add a `run` step that clears the cache if needed), demo accounts from seeders/fixtures.
 3. **Prepare a local server** with sample data (seeders). Common requirements: the app's base URL setting (e.g. `APP_URL`) must match `base`, otherwise CSS fails to load; real OTP/email delivery is disabled so codes are written to the log. If you must change `.env` or similar, back it up first, restore it afterwards, and tell the user.
 4. **Write shot entries.** Name them in guide order (`01_login`, `02_dashboard`, ...) or follow the project's existing naming. Use `highlight` for the button a guide step talks about, `element` for modals/forms.
-5. **Sensitive data must be blurred** (`blur`): passwords, PINs, OTPs, 2FA QR codes/secrets, tokens, real order/record IDs, people's names and contacts. Put app-wide selectors in `alwaysBlur`.
+5. **Sensitive data must be blurred** (`blur`): passwords, PINs, OTPs, 2FA QR codes/secrets, tokens, real order/record IDs, people's names and contacts. Put app-wide selectors in `alwaysBlur`. Blur also applies to every frame of a `video`. `keepLogin` writes live session cookies to `.gushot/` next to the config: never commit that folder (it has its own `.gitignore`), and do not enable `keepLogin` on shared machines.
 6. **Run**, preferably only the changed entries (filter = substring of `name`):
    ```bash
    node "<SKILL>/scripts/shot.cjs" <config.json> <filter>

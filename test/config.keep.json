@@ -1,0 +1,18 @@
+{
+  "keepLogin": 60,
+  "out": "output",
+  "sessions": {
+    "user": [
+      { "open": "./page.html" },
+      { "type": "input[type=email]", "text": "user@example.com" },
+      { "type": "input[type=password]", "text": "{{TEST_PASSWORD}}" },
+      { "click": "#login button" },
+      { "run": "node -e \"require('fs').appendFileSync('otp.log','Code for user: 123456\\n')\"" },
+      { "otp": { "file": "otp.log", "pattern": "Code for user: (\\d{6})", "into": "input[autocomplete=one-time-code]", "submit": { "clickText": "Verify" } } },
+      { "wait": "#app" }
+    ]
+  },
+  "shots": [
+    { "name": "k01_kept_login", "session": "user", "highlight": [{ "selector": ".open", "note": "Opens the form" }] }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "out": "output",
+  "alwaysBlur": [".sensitive"],
+  "sessions": {
+    "user": [
+      { "open": "./page.html" },
+      { "type": "input[type=email]", "text": "user@example.com" },
+      { "type": "input[type=password]", "text": "{{TEST_PASSWORD}}" },
+      { "click": "#login button" },
+      { "clickText": "Verify" },
+      { "wait": "#app" }
+    ]
+  },
+  "shots": [
+    { "name": "v01_open_form", "session": "user", "video": "mp4",
+      "steps": [{ "clickText": "Add" }, { "wait": ".modal" }],
+      "highlight": [{ "selector": ".modal", "label": "1", "note": "The form opens here" }] }
+  ]
+}

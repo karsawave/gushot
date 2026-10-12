@@ -5,9 +5,10 @@
 <form id="login" onsubmit="event.preventDefault(); document.getElementById('otp').hidden=false">
   <input type="email" placeholder="email"> <input type="password" placeholder="password"> <button type="submit">Sign in</button>
 </form>
-<div id="otp" hidden><input autocomplete="one-time-code"> <button onclick="document.getElementById('app').hidden=false">Verify</button></div>
+<div id="otp" hidden><input autocomplete="one-time-code"> <button onclick="localStorage.token='t'; document.getElementById('app').hidden=false">Verify</button></div>
 <div id="app" hidden>
   <p>Order: <span class="sensitive">INV-2026-0001</span></p>
   <button class="open" onclick="document.querySelector('.modal').style.display='block'">Add</button>
   <div class="modal">Add order form</div>
 </div>
+<script>if (localStorage.token) document.getElementById('app').hidden = false; // logged in earlier (keepLogin test)</script>

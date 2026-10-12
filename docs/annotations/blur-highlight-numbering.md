@@ -26,7 +26,7 @@ flowchart TD
 ```json
 "alwaysBlur": [".customer", ".phone", ".contact"],
 "shots": [
-  { "name": "01_highlight_button", "session": "admin", "highlight": ["#new-order"] },
+  { "name": "01_highlight_button", "session": "admin", "highlight": [{ "selector": "#new-order", "note": "Start a new order here" }] },
   { "name": "02_hide_stats", "session": "admin", "hide": [".stats"], "blur": ["td:nth-child(4)"] },
   { "name": "03_numbered_form", "session": "admin",
     "steps": [{ "click": "#new-order" }, { "wait": ".modal" }],
@@ -45,9 +45,9 @@ cd docs/annotations
 APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.json
 ```
 
-## One red box
+## One red box, with a note
 
-`"highlight": ["#new-order"]` draws a red box around the button. Use it when the guide says "click New order".
+`"highlight": ["#new-order"]` draws a red box around the button. Use it when the guide says "click New order". Written as an object, it can carry a `note`: a short callout placed below the box (above it when the box is near the bottom of the screen), so the image makes sense even without the paragraph next to it.
 
 ![Highlighted button](screenshots/01_highlight_button.png)
 
@@ -73,5 +73,7 @@ The guide text for this image can be:
 - `alwaysBlur` belongs in the config once; do not repeat it in every shot.
 - Change the box color with `"highlightColor": "#2563eb"` and the blur radius with `"blurStrength": 8`.
 - Labels can be any short text: `"A"`, `"2a"`, `"✓"`.
+- Keep notes to a few words. A label and a note can be combined: `{ "selector": "#save", "label": "4", "note": "Save" }`.
+- In Indonesian configs the note key can be written `catatan`.
 
-Next: [4. Keeping screenshots current](../maintenance/update-after-ui-change.md)
+Next: [4. Keeping screenshots current](../maintenance/update-after-ui-change.md). To show a flow as it happens, see [6. Recording a flow as a video](../video/record-a-flow.md).

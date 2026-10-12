@@ -1,0 +1,7 @@
+{
+  "ffmpeg": "./no-such-ffmpeg",
+  "out": "output",
+  "shots": [
+    { "name": "v02_missing_ffmpeg", "url": "./page.html", "video": true }
+  ]
+}
