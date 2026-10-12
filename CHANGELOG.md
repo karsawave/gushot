@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (1.1.0)
+## 1.1.0 (2026-10-13)
 
 - Numbered highlights: `"highlight": [{ "selector": "#save", "label": "1" }]` puts a numbered badge on the top-right corner of the red box, to match "click 1, then 2" in the guide. Plain selectors still work.
 - `scale` at the root sets the pixel density for every shot; `2` gives sharp images for PDF, print, and HiDPI screens. Indonesian alias: `skala`.
