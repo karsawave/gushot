@@ -28,7 +28,8 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | `ketik` + `teks` | `type` + `text` | ketik ke input |
 | `klik` | `click` | klik selector |
 | `klikTeks` + `di` | `clickText` + `within` | klik berdasarkan teks |
-| `pilih` + `nilai` | `select` + `value` | pilih dropdown |
+| `pilih` + `nilai` | `select` + `value` | pilih dropdown (nilai atau awal teks opsi; termasuk Select2) |
+| `isi` | `fill` | isi kolom berdasarkan teks label |
 | `tekan` | `press` | tekan tombol keyboard |
 | `tunggu` + `batas` | `wait` + `timeout` | tunggu ms atau selector |
 | `tungguTeks` | `waitText` | tunggu teks muncul |

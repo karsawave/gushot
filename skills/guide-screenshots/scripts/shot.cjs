@@ -40,6 +40,8 @@ const MSG = {
     otpNotFound: (f) => `OTP not found in ${f}`,
     noSession: (n) => `session "${n}" is not defined in the config`,
     noElement: (s) => `element ${s} not found`,
+    noOption: (v) => `option "${v}" not found`,
+    noLabel: (l) => `field label not found: ${l}`,
     unknownKey: (k) => `WARN unknown key "${k}" (typo?), ignored`,
     reusedLogin: (n) => `      (session "${n}": saved login reused)`,
     noFfmpeg: 'ffmpeg not found (needed for "video"): install it, or set "ffmpeg" in the config to its path',
@@ -60,6 +62,8 @@ const MSG = {
     otpNotFound: (f) => `OTP tidak ditemukan di ${f}`,
     noSession: (n) => `sesi "${n}" tidak ada di konfigurasi`,
     noElement: (s) => `elemen ${s} tidak ada`,
+    noOption: (v) => `opsi "${v}" tidak ditemukan`,
+    noLabel: (l) => `label kolom tidak ditemukan: ${l}`,
     unknownKey: (k) => `PERINGATAN key "${k}" tidak dikenal (salah ketik?), diabaikan`,
     reusedLogin: (n) => `      (sesi "${n}": login tersimpan dipakai ulang)`,
     noFfmpeg: 'ffmpeg tidak ditemukan (dibutuhkan "video"): pasang ffmpeg, atau isi "ffmpeg" di konfigurasi dengan path-nya',
@@ -82,7 +86,7 @@ const ALIAS = {
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
-    gulirKe: 'scrollTo', perintah: 'run' },
+    gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
   highlight: { catatan: 'note' },
 };
@@ -94,7 +98,7 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 const KEYS = {
   root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay',
-  step: 'open type text click clickText within select value press wait waitText timeout scrollTo js run cwd otp',
+  step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note',
 };
@@ -183,13 +187,72 @@ async function byText(page, text, selector = 'button, a, [role=button], label, s
 
 const settle = (page, ms = 400) => page.waitForNetworkIdle({ idleTime: ms, timeout: 15000 }).catch(() => {});
 
+// Pick an option of a <select> by value or by the start of its text, waiting for options that load
+// later (AJAX). A native change event is enough for Select2 and similar plugins: they listen to it.
+async function choose(page, handle, value, timeout) {
+  const ok = await page.waitForFunction((e, v) => {
+    const t = String(v).trim().toLowerCase();
+    const o = [...e.options].find((x) => x.value === String(v))
+      || [...e.options].find((x) => x.value && x.text.trim().toLowerCase().startsWith(t));
+    if (!o) return false;
+    e.value = o.value;
+    e.dispatchEvent(new Event('input', { bubbles: true }));
+    e.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }, { timeout: timeout ?? 15000, polling: 250 }, handle, value).catch(() => null);
+  if (!ok) throw new Error(T.noOption(value));
+}
+
+// { "fill": { "Asset Name": "Laptop", "Supplier": "PT Sinar Jaya", "Active": true } }: find each field
+// by its visible <label> text (inside `within`, else inside an open modal, else the page) and fill it.
+async function fillByLabel(page, fields, within, timeout) {
+  const missing = [];
+  for (const [label, value] of Object.entries(fields)) {
+    const h = (await page.evaluateHandle((lbl, root) => {
+      const norm = (x) => x.replace(/\*/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+      const visible = (e) => e.getClientRects().length > 0;
+      const scope = (root && document.querySelector(root))
+        || [...document.querySelectorAll('.modal.show, dialog[open]')].find(visible) || document;
+      const labels = [...scope.querySelectorAll('label')].filter(visible);
+      const want = norm(lbl);
+      const L = labels.find((x) => norm(x.textContent) === want) || labels.find((x) => norm(x.textContent).startsWith(want));
+      if (!L) return null;
+      if (L.control) return L.control;
+      for (let n = L.parentElement, i = 0; n && i < 3; n = n.parentElement, i++) {
+        const c = n.querySelector('input:not([type=hidden]), select, textarea');
+        if (c) return c;
+      }
+      return null;
+    }, label, within || null)).asElement();
+    if (!h) { missing.push(label); continue; }
+    const kind = await h.evaluate((e) => (e.tagName === 'SELECT' ? 'select'
+      : ['checkbox', 'radio'].includes(e.type) ? 'check'
+        : e.readOnly || ['date', 'datetime-local', 'time', 'month', 'week', 'color', 'range'].includes(e.type) ? 'set' : 'type'));
+    if (kind === 'select') await choose(page, h, value, timeout);
+    else if (kind === 'check') await h.evaluate((e, v) => { if (e.checked !== !!v) e.click(); }, value);
+    else if (kind === 'set') {
+      await h.evaluate((e, v) => {
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+      }, String(value));
+    } else {
+      await h.evaluate((e) => { e.value = ''; e.focus(); });
+      await h.type(String(value));
+    }
+  }
+  if (missing.length) throw new Error(T.noLabel(missing.join(', ')));
+}
+
 // One step = one object with one action key. See README for the list.
 async function run(page, l) {
   if (l.open) { await page.goto(absUrl(l.open), { waitUntil: 'networkidle2' }); return; }
   if (l.type) { await page.waitForSelector(l.type, { visible: true }); await page.click(l.type, { clickCount: 3 }); await page.type(l.type, String(l.text ?? '')); return; }
   if (l.click) { await page.waitForSelector(l.click, { visible: true }); await page.click(l.click); await settle(page); return; }
   if (l.clickText) { await (await byText(page, l.clickText, l.within)).click(); await settle(page); return; }
-  if (l.select) { await page.select(l.select, l.value); await settle(page); return; }
+  if (l.select) { await choose(page, await page.waitForSelector(l.select, { timeout: l.timeout ?? 15000 }), l.value, l.timeout); await settle(page); return; }
+  if (l.fill) { await fillByLabel(page, l.fill, l.within, l.timeout); await settle(page); return; }
+  if (l.cookie) { await page.browserContext().setCookie({ path: '/', ...(BASE ? { domain: new URL(BASE).hostname } : {}), ...l.cookie }); return; }
   if (l.press) { await page.keyboard.press(l.press); await settle(page); return; }
   if (l.wait !== undefined) {
     if (typeof l.wait === 'number') await sleep(l.wait);
@@ -291,29 +354,33 @@ const outFile = (s) => path.join(OUT, s.name.endsWith('.png') ? s.name : `${s.na
 const hashOf = (f) => (fs.existsSync(f) ? crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex') : null);
 
 // Highlight (red box, optional numbered badge and callout note) the elements a guide step refers to.
+// Everything is drawn as separate overlay elements on <body>, not on the element itself, so a blur on
+// the element does not blur the box and an `overflow: hidden` parent does not cut it off.
 async function annotate(page, s) {
   if (!s.highlight.length) return;
   await page.evaluate((hl, color) => hl.forEach(({ selector, label, note }) => document.querySelectorAll(selector).forEach((e) => {
-    e.dataset.shotOutline = e.style.outline; e.style.outline = `3px solid ${color}`; e.style.outlineOffset = '3px';
     const r = e.getBoundingClientRect();
+    if (!r.width && !r.height) return;
+    const add = (css, text) => {
+      const d = document.createElement('div');
+      d.className = 'gushot-label';
+      if (text !== undefined) d.textContent = text;
+      d.style.cssText = `position:absolute;z-index:2147483647;pointer-events:none;${css}`;
+      document.body.appendChild(d);
+      return d;
+    };
+    add(`left:${r.left + scrollX - 6}px;top:${r.top + scrollY - 6}px;width:${r.width + 12}px;height:${r.height + 12}px;`
+      + `box-sizing:border-box;border:3px solid ${color};border-radius:4px`);
     if (label !== undefined) {
-      const b = document.createElement('div');
-      b.className = 'gushot-label';
-      b.textContent = label;
-      b.style.cssText = `position:absolute;z-index:2147483647;left:${r.right + scrollX - 10}px;top:${r.top + scrollY - 14}px;`
-        + `min-width:24px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:12px;background:${color};color:#fff;`
-        + 'font:700 13px/24px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff';
-      document.body.appendChild(b);
+      add(`left:${r.right + scrollX - 10}px;top:${r.top + scrollY - 14}px;min-width:24px;height:24px;padding:0 6px;`
+        + `box-sizing:border-box;border-radius:12px;background:${color};color:#fff;`
+        + 'font:700 13px/24px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px #fff', label);
     }
     if (note) {
       // Below the box, or above it when there is no room; kept inside the viewport horizontally.
-      const n = document.createElement('div');
-      n.className = 'gushot-label';
-      n.textContent = note;
-      n.style.cssText = 'position:absolute;z-index:2147483647;max-width:260px;padding:6px 10px;border-radius:6px;'
+      const n = add('max-width:260px;padding:6px 10px;border-radius:6px;'
         + `background:#111827;color:#fff;border-left:3px solid ${color};font:500 13px/1.4 system-ui,sans-serif;`
-        + 'box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:normal';
-      document.body.appendChild(n);
+        + 'box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:normal', note);
       const below = r.bottom + 14 + n.offsetHeight <= innerHeight;
       const left = Math.max(8, Math.min(r.left, innerWidth - n.offsetWidth - 8));
       n.style.left = `${left + scrollX}px`;
@@ -322,14 +389,23 @@ async function annotate(page, s) {
   })), s.highlight, cfg.highlightColor || '#e11d48');
 }
 
-async function unannotate(page, s) {
-  if (!s.highlight.length) return;
-  await page.evaluate((hl) => {
-    hl.forEach(({ selector }) => document.querySelectorAll(selector).forEach((e) => {
-      e.style.outline = e.dataset.shotOutline || ''; e.style.outlineOffset = '';
-    }));
-    document.querySelectorAll('.gushot-label').forEach((b) => b.remove());
-  }, s.highlight);
+async function unannotate(page) {
+  await page.evaluate(() => document.querySelectorAll('.gushot-label').forEach((b) => b.remove()));
+}
+
+// An element taller than the viewport (a long modal) would be cut off, with the page behind it in
+// the image. Make the viewport tall enough first; the caller restores it.
+async function fitViewport(page, el, s) {
+  const vp = page.viewport();
+  const need = await el.evaluate((e, p) => {
+    const r = e.getBoundingClientRect();
+    return Math.ceil(Math.max(0, r.top) + Math.max(r.height, e.scrollHeight) + p + 20);
+  }, s.padding || 0);
+  if (need <= vp.height) return null;
+  await page.setViewport({ ...vp, height: need });
+  await settle(page, 300);
+  await sleep(300);
+  return vp;
 }
 
 // blur + hide + extra css for one shot.
@@ -380,7 +456,7 @@ async function record(page, s) {
     await sleep(2500); // hold on the result; the screencast also lags a little behind the page
   } finally {
     await rec.stop();
-    await unannotate(page, s).catch(() => {});
+    await unannotate(page).catch(() => {});
     await page.removeScriptToEvaluateOnNewDocument(identifier);
     await page.evaluate(() => document.querySelectorAll('.gushot-video').forEach((e) => e.remove())).catch(() => {});
   }
@@ -392,31 +468,34 @@ async function capture(page, s) {
   await sleep(s.delay ?? cfg.delay ?? 500);
   const css = shotCss(s);
   const tag = css ? await page.addStyleTag({ content: css }) : null;
-
-  await annotate(page, s);
-
   const file = outFile(s);
-  if (s.element) {
-    const el = await page.$(s.element);
-    if (!el) throw new Error(T.noElement(s.element));
-    if (CHECK) { /* element exists, nothing to save */ } else if (s.padding) {
+  const el = s.element ? await page.$(s.element) : null;
+  if (s.element && !el) throw new Error(T.noElement(s.element));
+  // Resize first, then draw the highlights, so they are placed on the final layout.
+  const restore = el && !CHECK ? await fitViewport(page, el, s) : null;
+  try {
+    await annotate(page, s);
+    if (CHECK) {
+      // Only check that the steps ran and the element exists.
+    } else if (el && s.padding) {
       // Element plus some surrounding page, clamped to the page edges.
       await el.scrollIntoView();
-      const b = await el.boundingBox();
+      const r = await el.boundingBox();
       const { sx, sy } = await page.evaluate(() => ({ sx: scrollX, sy: scrollY }));
       const p = s.padding;
-      const x = Math.max(0, b.x + sx - p), y = Math.max(0, b.y + sy - p);
+      const x = Math.max(0, r.x + sx - p), y = Math.max(0, r.y + sy - p);
       await page.screenshot({ path: file, captureBeyondViewport: true,
-        clip: { x, y, width: b.x + sx + b.width + p - x, height: b.y + sy + b.height + p - y } });
-    } else {
+        clip: { x, y, width: r.x + sx + r.width + p - x, height: r.y + sy + r.height + p - y } });
+    } else if (el) {
       await el.screenshot({ path: file });
+    } else {
+      await page.screenshot({ path: file, fullPage: !!s.fullPage });
     }
-  } else if (!CHECK) {
-    await page.screenshot({ path: file, fullPage: !!s.fullPage });
+  } finally {
+    await unannotate(page);
+    if (tag) await tag.evaluate((t) => t.remove());
+    if (restore) await page.setViewport(restore);
   }
-
-  await unannotate(page, s);
-  if (tag) await tag.evaluate((t) => t.remove());
   return file;
 }
 

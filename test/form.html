@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Form test</title>
+<!-- Mimics the ITSM asset form: labels next to fields, a select whose options arrive later (AJAX),
+     a checkbox, a modal taller than the viewport, and a sensitive field that is both blurred and highlighted. -->
+<style>
+  body { font: 16px sans-serif; margin: 0; padding: 24px; }
+  .row { display: flex; gap: 12px; margin: 10px 0; align-items: center; }
+  .row label { width: 160px; }
+  #secret-wrap { padding: 20px; width: 320px; background: #fff; }
+  .modal { display: none; position: fixed; inset: 0; overflow-y: auto; background: rgba(0,0,0,.4); }
+  .modal.show { display: block; }
+  .modal-content { width: 420px; margin: 30px auto; background: #fff; padding: 20px; height: 1400px; box-sizing: border-box; }
+  #status { margin-top: 16px; font: 14px monospace; }
+</style>
+
+<form id="form">
+  <div class="row"><label for="name">Asset Name <span>*</span></label><input id="name"></div>
+  <div class="row"><label>Supplier</label><div><select id="supplier"><option value="">-- Select --</option></select></div></div>
+  <div class="row"><label for="date">Purchase Date</label><input id="date" type="date"></div>
+  <div class="row"><label><input type="checkbox" id="active"> Active</label></div>
+</form>
+<div id="secret-wrap"><input class="sensitive" id="secret" value="NIP 1987654321" style="width:280px"></div>
+<button id="open" type="button" onclick="document.getElementById('modal').classList.add('show')">Disposal</button>
+<div id="status"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3>Disposal Asset</h3>
+    <div class="row"><label for="reason">Disposal Reason</label>
+      <select id="reason"><option value="">-- Select reason --</option><option value="R1">Broken</option><option value="R2">Obsolete</option></select></div>
+    <div class="row"><label for="name2">Asset Name</label><input id="name2"></div>
+    <p style="margin-top:1250px" id="modal-bottom">End of the modal</p>
+  </div>
+</div>
+
+<script>
+  // Supplier options arrive 800 ms after load, like an AJAX call.
+  setTimeout(() => {
+    const s = document.getElementById('supplier');
+    for (const [v, t] of [['5', 'PT Sinar Jaya'], ['6', 'CV Multi Skindo']]) s.add(new Option(t, v));
+  }, 800);
+  const show = () => {
+    const v = (id) => document.getElementById(id);
+    v('status').textContent = `name=${v('name').value};supplier=${v('supplier').value};date=${v('date').value};`
+      + `active=${v('active').checked};reason=${v('reason').value};name2=${v('name2').value}`;
+  };
+  document.addEventListener('input', show);
+  document.addEventListener('change', show);
+</script>

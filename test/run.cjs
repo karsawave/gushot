@@ -2,7 +2,7 @@
 // (3 OK, 1 deliberate failure -> exit 1, plus a warning for the deliberate typo key),
 // plus a --check run of every example config in docs/ and demo/ so they cannot go stale.
 // Exits 0 when everything matches. Usage: node test/run.cjs
-const { spawnSync } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,8 +12,45 @@ const shot = (...args) => {
   });
   return { status: r.status, out: r.stdout + r.stderr };
 };
-// PNG width is a big-endian uint32 at byte 16.
-const pngWidth = (f) => fs.readFileSync(path.join(__dirname, 'output', f)).readUInt32BE(16);
+// Async variant, for when this process must keep serving HTTP while the shot runs.
+const shotAsync = (env, ...args) => new Promise((resolve) => {
+  const c = spawn(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), ...args], {
+    cwd: __dirname, env: { ...process.env, ...env },
+  });
+  let out = '';
+  c.stdout.on('data', (d) => { out += d; });
+  c.stderr.on('data', (d) => { out += d; });
+  c.on('close', (status) => resolve({ status, out }));
+});
+// PNG width / height are big-endian uint32 at bytes 16 / 20.
+const png = (f) => fs.readFileSync(path.join(__dirname, 'output', f));
+const pngWidth = (f) => png(f).readUInt32BE(16);
+const pngHeight = (f) => png(f).readUInt32BE(20);
+// Count pure highlight-red pixels in a PNG (a blurred box would have almost none).
+async function redPixels(f) {
+  const puppeteer = require('../skills/guide-screenshots/scripts/node_modules/puppeteer-core');
+  const chrome = [process.env.CHROME_PATH, ...[process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)'], process.env.LOCALAPPDATA]
+    .filter(Boolean).map((d) => path.join(d, 'Google/Chrome/Application/chrome.exe')),
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/chromium']
+    .find((p) => p && fs.existsSync(p));
+  const b = await puppeteer.launch({ executablePath: chrome });
+  try {
+    const page = await b.newPage();
+    return await page.evaluate(async (src) => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      const x = c.getContext('2d');
+      x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i] > 200 && d[i + 1] < 60 && d[i + 2] < 110) n++;
+      return n;
+    }, `data:image/png;base64,${png(f).toString('base64')}`);
+  } finally { await b.close(); }
+}
 
 const cases = [
   ['English keys, numbered highlight, element padding', () => {
@@ -57,6 +94,26 @@ const cases = [
     const r = shot('config.video.json');
     return r.status === 0 && r.out.includes('v01_open_form.mp4 (video)') && fs.statSync(f).size > 10000 || r.out;
   }],
+  ['fill by label, async select, long modal, sharp highlight on blur', async () => {
+    const r = shot('config.form.json');
+    if (!(r.status === 1 && r.out.includes('Done: 4 OK, 1 failed') && r.out.includes('field label not found: Asset Nmae'))) return r.out;
+    if (pngHeight('f03_long_modal.png') < 1400) return `long modal cut off: ${pngHeight('f03_long_modal.png')}px high`;
+    const red = await redPixels('f04_sharp_highlight_on_blur.png');
+    return red > 300 || `highlight looks blurred: only ${red} red pixels`;
+  }],
+  ['cookie step sets a session cookie', async () => {
+    const server = require('http').createServer((q, res) => {
+      const f = path.join(__dirname, path.basename(q.url.split('?')[0]));
+      if (!fs.existsSync(f)) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(fs.readFileSync(f));
+    });
+    await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
+    try {
+      const r = await shotAsync({ TEST_BASE: `http://127.0.0.1:${server.address().port}`, TEST_SESSION: 'abc123' }, 'config.cookie.json');
+      return r.status === 0 && r.out.includes('c01_session_cookie') || r.out;
+    } finally { server.close(); }
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);
@@ -70,10 +127,12 @@ const cases = [
     return bad === '' || bad;
   }],
 ];
-let bad = 0;
-for (const [name, run] of cases) {
-  const res = run();
-  console.log(res === true ? 'PASS' : 'FAIL', name);
-  if (res !== true) { bad++; console.log(res); }
-}
-process.exit(bad ? 1 : 0);
+(async () => {
+  let bad = 0;
+  for (const [name, run] of cases) {
+    const res = await run();
+    console.log(res === true ? 'PASS' : 'FAIL', name);
+    if (res !== true) { bad++; console.log(res); }
+  }
+  process.exit(bad ? 1 : 0);
+})();

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+Fixes and steps found while using GuShot on a real app (36 screenshots for an asset management guide):
+
+- `element` captures elements taller than the viewport whole. A long modal used to be cut off, with the page behind it in the image.
+- Highlight boxes, numbers, and notes are drawn on top of the page instead of as an outline on the element, so they stay sharp on blurred fields and are not cut off by the element's parents.
+- `select` takes the start of the option text as well as its value, waits for options loaded by AJAX, and works with Select2.
+- New `fill` step fills a form by label text: `{ "fill": { "Asset Name": "Laptop", "Active": true } }`. Indonesian alias: `isi`.
+- New `cookie` step reuses an existing session cookie when the login cannot be automated (SSO, captcha).
+- SKILL.md tells agents not to write their own browser scripts, to use a `js` step instead, and to report what GuShot could not do.
 - Chrome is started once more when it refuses its fresh temporary profile ("browser is already running"), a hiccup seen on Windows.
 
 ## 1.1.0 (2026-10-13)

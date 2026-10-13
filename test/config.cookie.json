@@ -1,0 +1,14 @@
+{
+  "base": "{{TEST_BASE}}",
+  "out": "output",
+  "sessions": {
+    "sso": [
+      { "cookie": { "name": "app_session", "value": "{{TEST_SESSION}}" } },
+      { "open": "/cookie.html" },
+      { "waitText": "app_session=abc123" }
+    ]
+  },
+  "shots": [
+    { "name": "c01_session_cookie", "session": "sso" }
+  ]
+}

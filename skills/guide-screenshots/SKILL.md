@@ -18,7 +18,7 @@ All paths below are relative to **this skill's folder** (the folder containing t
 
 First run only: `npm install --omit=dev --prefix "<SKILL>/scripts"`. The script exits with code 2 and prints this command if the dependency is missing.
 
-Do not capture screenshots by hand through a browser tool and do not write a new browser-automation script: write or edit the JSON config, then run `scripts/shot.cjs`.
+Do not capture screenshots by hand through a browser tool and do not write a new browser-automation script (no own Puppeteer/Playwright/CDP code, no separate `shot.mjs`): write or edit the JSON config, then run `scripts/shot.cjs`. If a step cannot be expressed with the steps below, use a `js` step inside the config, and tell the user what GuShot could not do so it can be added.
 
 ## Language
 
@@ -29,8 +29,8 @@ Do not capture screenshots by hand through a browser tool and do not write a new
 ## Key summary
 
 Root: `base`, `scale` (2 = sharp for PDF/print), `keepLogin` (minutes; skip login/OTP on later runs), `ffmpeg`, `out`, `viewport`, `theme`, `alwaysBlur`, `css`, `delay`, `sessions` ({ name: [steps] }), `shots`.
-Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label, note }`: numbered badge matching the guide's step numbers, short callout text), `video` (`true`/`"gif"`/`"webm"`: record url + steps instead of a PNG; needs ffmpeg), `viewport`, `freshSession`, `delay`.
-Steps: `open`, `type`+`text`, `click`, `clickText` (+`within`), `select`+`value`, `press`, `wait` (ms or selector), `waitText`, `scrollTo`, `js`, `run` (+`cwd`), `otp` { `file`, `pattern` (regex, group 1 = code), `into`, `submit` }.
+Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context; elements taller than the viewport, such as long modals, are captured whole), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label, note }`: numbered badge matching the guide's step numbers, short callout text), `video` (`true`/`"gif"`/`"webm"`: record url + steps instead of a PNG; needs ffmpeg), `viewport`, `freshSession`, `delay`.
+Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by their `<label>`; checkboxes take `true`/`false`; + optional `within`), `click`, `clickText` (+`within`), `select`+`value` (value or start of the option text; waits for options loaded by AJAX; works with Select2), `cookie` ({ `name`, `value` }: reuse an existing session when the login cannot be automated, e.g. SSO or captcha; value from env), `press`, `wait` (ms or selector), `waitText`, `scrollTo`, `js`, `run` (+`cwd`), `otp` { `file`, `pattern` (regex, group 1 = code), `into`, `submit` }.
 
 ## Workflow
 

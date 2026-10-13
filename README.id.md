@@ -109,6 +109,8 @@ Yang paling sering dipakai:
 |---|---|
 | buka halaman | `{ "open": "/settings" }` |
 | ketik | `{ "type": "#email", "text": "a@b.c" }` |
+| isi form berdasarkan label | `{ "fill": { "Asset Name": "Laptop", "Supplier": "PT Sinar Jaya", "Active": true } }` |
+| pilih opsi | `{ "select": "#supplier", "value": "PT Sinar" }` (termasuk Select2 dan opsi yang dimuat belakangan) |
 | klik | `{ "click": "#save" }` atau berdasarkan teks: `{ "clickText": "Simpan" }` |
 | tunggu | `{ "wait": ".modal" }` (selector) atau `{ "wait": 1000 }` (ms) |
 | kode OTP | `{ "otp": { "file": "logs/app.log", "pattern": "code: (\\d{6})", "into": "#otp" } }` |

@@ -109,6 +109,8 @@ What you will use most:
 |---|---|
 | open a page | `{ "open": "/settings" }` |
 | type | `{ "type": "#email", "text": "a@b.c" }` |
+| fill a form by label | `{ "fill": { "Asset Name": "Laptop", "Supplier": "PT Sinar Jaya", "Active": true } }` |
+| choose an option | `{ "select": "#supplier", "value": "PT Sinar" }` (also Select2 and options loaded later) |
 | click | `{ "click": "#save" }` or by visible text: `{ "clickText": "Save" }` |
 | wait | `{ "wait": ".modal" }` (selector) or `{ "wait": 1000 }` (ms) |
 | one-time code | `{ "otp": { "file": "logs/app.log", "pattern": "code: (\\d{6})", "into": "#otp" } }` |

@@ -86,6 +86,17 @@ Alamat email, nama pelanggan, nomor HP, dan nama pengguna di-blur oleh `alwaysBl
 2. **Cari ke mana kode dikirim saat development.** Laravel dengan `MAIL_MAILER=log` menulis email ke `storage/logs/laravel.log`; banyak aplikasi mencetaknya ke log konsol. Arahkan `otp.file` ke sana dan tulis `pattern` yang cocok dengan barisnya, misalnya `"Your code is (\\d{6})"`.
 3. **Samakan URL dasar aplikasi dengan `base`.** Kalau aplikasi mengira dirinya berada di host lain, CSS dan cookie-nya rusak.
 4. **Waspadai batas percobaan login.** Tambahkan langkah `run` yang mengosongkan pembatasnya (misalnya `php artisan cache:clear`) di awal sesi.
+5. **Login tidak bisa diotomatisasi (SSO, captcha)?** Login sekali di browser Anda sendiri, salin cookie sesinya (DevTools > Application > Cookies), lalu mulai sesi dengan cookie itu, bukan dengan langkah login:
+
+   ```json
+   "admin": [
+     { "cookie": { "name": "laravel_session", "value": "{{SESSION_COOKIE}}" } },
+     { "open": "/dashboard" },
+     { "wait": ".main-content" }
+   ]
+   ```
+
+   Nilainya diambil dari environment, tidak pernah ditulis di file. Cookie ini berhenti berlaku kalau sesinya kedaluwarsa atau Anda logout.
 
 ```mermaid
 flowchart TD

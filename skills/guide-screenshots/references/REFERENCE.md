@@ -35,12 +35,12 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `url` | page to open |
 | `steps` | actions before capturing (click a button, open a modal, fill a form) |
 | `video` | record the shot instead of a PNG: `true` or `"mp4"`, `"gif"` (loops), `"webm"`. Records opening `url` and every step, with a short pause after each, then holds on the `highlight` boxes. `alwaysBlur`, `blur`, and `hide` apply to every frame. Saved as `<name>.<format>`. Needs ffmpeg. `element`, `padding`, and `fullPage` do not apply |
-| `element` | capture only this element (e.g. a modal) |
+| `element` | capture only this element (e.g. a modal). If it is taller than the viewport (a long modal), the viewport is made taller for this capture so the whole element is in the image |
 | `padding` | with `element`: px of surrounding page to include on each side, e.g. `16` |
 | `fullPage` | `true` = whole page, not just the viewport |
 | `blur` | extra selectors to blur |
 | `hide` | selectors to hide |
-| `highlight` | elements outlined with a red box (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen) |
+| `highlight` | elements marked with a red box (drawn on top of the page, so it stays sharp over blurred fields and is not cut off by the element's parents) (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen) |
 | `viewport` | size for this shot only (e.g. mobile) |
 | `freshSession` | `true` = start the session again in a new browser context first (clean state). With `keepLogin`, a still-valid saved login is reused instead of logging in |
 | `delay` | extra ms before capturing |
@@ -55,7 +55,9 @@ One object = one action:
 | type | `{ "type": "#email", "text": "a@b.c" }` |
 | click | `{ "click": "button[type=submit]" }` |
 | click by text | `{ "clickText": "Save" }` (optional `"within": "button"`) |
-| select | `{ "select": "select#status", "value": "active" }` |
+| select | `{ "select": "select#status", "value": "active" }`. `value` is the option value or the start of its text (`"PT Sinar"`). Waits up to `timeout` (15 s) for options loaded by AJAX. Works with Select2 and similar plugins |
+| fill by label | `{ "fill": { "Asset Name": "Laptop", "Supplier": "PT Sinar Jaya", "Purchase Date": "2026-03-10", "Active": true } }`. Each key is the visible text of a field's `<label>` (exact, or the start of it; `*` ignored). Looks inside `within` if given, else inside an open modal (`.modal.show`, `dialog[open]`), else the page. Text fields are typed, selects work like `select`, checkboxes take `true`/`false`, date and read-only fields are set directly. Labels that are not found fail the shot with their names |
+| cookie | `{ "cookie": { "name": "app_session", "value": "{{SESSION_COOKIE}}" } }`, usually first in a session, followed by `open`. For logins that cannot be automated (SSO, captcha): copy the session cookie from your browser into an environment variable. Domain defaults to the host of `base`; `domain`, `path`, `secure`, `httpOnly` can be set |
 | press key | `{ "press": "Enter" }` |
 | wait | `{ "wait": 1000 }` or `{ "wait": ".modal" }` (optional `"timeout"`) |
 | wait for text | `{ "waitText": "Saved" }` |
