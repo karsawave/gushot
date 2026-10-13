@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 (2026-10-13)
 
 Fixes and steps found while using GuShot on a real app (36 screenshots for an asset management guide):
 
