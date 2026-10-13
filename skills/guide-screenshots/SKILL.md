@@ -39,6 +39,13 @@ Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by the
 2. **Learn the login flow from the code, do not guess:** login page, input selectors, whether there is 2FA/OTP, where the OTP is written in local dev (log/mail log), login rate limits (add a `run` step that clears the cache if needed), demo accounts from seeders/fixtures.
 3. **Prepare a local server** with sample data (seeders). Common requirements: the app's base URL setting (e.g. `APP_URL`) must match `base`, otherwise CSS fails to load; real OTP/email delivery is disabled so codes are written to the log. If you must change `.env` or similar, back it up first, restore it afterwards, and tell the user.
 4. **Write shot entries.** Name them in guide order (`01_login`, `02_dashboard`, ...) or follow the project's existing naming. Use `highlight` for the button a guide step talks about, `element` for modals/forms.
+   **Numbered markers must match the guide text**, or readers get lost:
+   - A marker's `label` is the number of the step in the guide text that refers to it. If the text says "2. Fill in NIP / Email", that field gets `"label": "2"`, not `"1"`.
+   - Only steps that point at something on screen get a marker. "1. Open the app" gets none, so the numbers in an image may start at 2 or skip numbers. That is correct.
+   - Do not write "(marker 1)" in the text; the matching number is enough.
+   - Highlight what the reader sees as one control: the whole field with its icon or button (e.g. `.input-group`, the form row), not the bare `input` inside it.
+   - When a step is about one form or modal, crop to it (`element` + `padding` ~24) so markers stay readable when the image is scaled down in the document. Whole-page shots are for "where is this menu" steps.
+   - Write the guide text and the config together, step by step, and check each image against its step list before moving on.
 5. **Sensitive data must be blurred** (`blur`): passwords, PINs, OTPs, 2FA QR codes/secrets, tokens, real order/record IDs, people's names and contacts. Put app-wide selectors in `alwaysBlur`. Blur also applies to every frame of a `video`. `keepLogin` writes live session cookies to `.gushot/` next to the config: never commit that folder (it has its own `.gitignore`), and do not enable `keepLogin` on shared machines.
 6. **Run**, preferably only the changed entries (filter = substring of `name`):
    ```bash

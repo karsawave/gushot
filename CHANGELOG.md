@@ -9,6 +9,7 @@ Fixes and steps found while using GuShot on a real app (36 screenshots for an as
 - `select` takes the start of the option text as well as its value, waits for options loaded by AJAX, and works with Select2.
 - New `fill` step fills a form by label text: `{ "fill": { "Asset Name": "Laptop", "Active": true } }`. Indonesian alias: `isi`.
 - New `cookie` step reuses an existing session cookie when the login cannot be automated (SSO, captcha).
+- SKILL.md: numbered markers must use the step numbers of the guide text ("2. Fill in NIP" gets marker 2), steps that point at nothing get no marker, highlight the whole field group, and crop to the form so markers stay readable. Tutorial 3 shows a matching text and config.
 - SKILL.md tells agents not to write their own browser scripts, to use a `js` step instead, and to report what GuShot could not do.
 - Chrome is started once more when it refuses its fresh temporary profile ("browser is already running"), a hiccup seen on Windows.
 

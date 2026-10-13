@@ -59,11 +59,33 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 
 ## Numbered steps, only the modal
 
-The guide text for this image can be:
-
-> 1. Enter the customer's name or phone. 2. Choose the item. 3. Set the quantity. 4. Click **Save order**.
-
 `element` captures only the modal, `padding: 24` keeps 24 px of the page around it so the reader sees it is a dialog, and each `label` puts a number on the box.
+
+**The numbers in the image must be the step numbers in the text.** The guide text for this image:
+
+> 1. On the order list, click **+ New order**. The *New order* window opens.
+> 2. Enter the customer's name or phone.
+> 3. Choose the item.
+> 4. Set the quantity.
+> 5. Click **Save order**.
+
+So the fields get labels `2` to `5`, not `1` to `4`. Step 1 happens before this window is open, so it has no marker in this image (it has its own image, `01_highlight_button`). Readers then see "step 3" in the text and find ③ in the picture, without a separate "(marker 2)" note.
+
+```json
+"highlight": [
+  { "selector": "#cust", "label": "2" },
+  { "selector": "#menu", "label": "3" },
+  { "selector": "#qty", "label": "4" },
+  { "selector": ".modal .primary", "label": "5" }
+]
+```
+
+The example config numbers from 1 because it shows the feature on its own; in a real guide, copy the numbers from your text.
+
+Two more rules that keep markers readable:
+
+- Highlight what the reader sees as one control. If a field has an icon or a button attached (an input group), highlight the group, not the bare `input` inside it.
+- Crop to the form or modal the steps are about (`element` + `padding`). On a full-page image scaled down to fit a document, the markers become too small to read.
 
 ![Numbered form fields](screenshots/03_numbered_form.png)
 

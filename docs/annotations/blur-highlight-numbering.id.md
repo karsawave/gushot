@@ -59,11 +59,33 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 
 ## Langkah bernomor, hanya modal
 
-Teks panduan untuk gambar ini bisa berupa:
-
-> 1. Isi nama atau nomor HP pelanggan. 2. Pilih menu. 3. Atur jumlah. 4. Klik **Save order**.
-
 `element` hanya memotret modal, `padding: 24` menyertakan 24 px halaman di sekelilingnya supaya pembaca tahu itu jendela dialog, dan setiap `label` menaruh nomor di kotaknya.
+
+**Nomor di gambar harus sama dengan nomor langkah di teks.** Teks panduan untuk gambar ini:
+
+> 1. Di daftar pesanan, klik **+ New order**. Jendela *New order* terbuka.
+> 2. Isi nama atau nomor HP pelanggan.
+> 3. Pilih menu.
+> 4. Atur jumlah.
+> 5. Klik **Save order**.
+
+Jadi kolom-kolomnya diberi label `2` sampai `5`, bukan `1` sampai `4`. Langkah 1 terjadi sebelum jendela ini terbuka, jadi tidak punya penanda di gambar ini (langkah itu punya gambarnya sendiri, `01_highlight_button`). Pembaca melihat "langkah 3" di teks lalu menemukan ③ di gambar, tanpa perlu catatan "(penanda 2)".
+
+```json
+"highlight": [
+  { "selector": "#cust", "label": "2" },
+  { "selector": "#menu", "label": "3" },
+  { "selector": "#qty", "label": "4" },
+  { "selector": ".modal .primary", "label": "5" }
+]
+```
+
+Config contoh memberi nomor mulai 1 karena hanya memperlihatkan fiturnya; di panduan sungguhan, salin nomornya dari teks Anda.
+
+Dua aturan lagi supaya penanda mudah dibaca:
+
+- Sorot apa yang pembaca lihat sebagai satu kesatuan. Kalau kolom punya ikon atau tombol yang menempel (input group), sorot kelompoknya, bukan `input` di dalamnya.
+- Potong ke form atau modal yang dibahas langkah-langkahnya (`element` + `padding`). Pada gambar satu halaman penuh yang dikecilkan supaya muat di dokumen, penandanya jadi terlalu kecil untuk dibaca.
 
 ![Kolom form bernomor](screenshots/03_numbered_form.png)
 
