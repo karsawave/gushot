@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `keepLogin` says why a saved login was not reused (for example `expired`) instead of silently logging in again.
+- The `keepLogin` self-test runs over a local HTTP server like a real app, instead of a `file://` page; it failed once on Linux CI without a visible reason.
+
 ## 1.3.0 (2026-10-14)
 
 Found while redoing the asset management guide of a real app with `fill`:

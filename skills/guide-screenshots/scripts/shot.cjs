@@ -44,6 +44,7 @@ const MSG = {
     noLabel: (l) => `field label not found: ${l}`,
     unknownKey: (k) => `WARN unknown key "${k}" (typo?), ignored`,
     reusedLogin: (n) => `      (session "${n}": saved login reused)`,
+    loginNotReused: (n, why) => `      (session "${n}": saved login not usable, logging in again: ${why})`,
     noFfmpeg: 'ffmpeg not found (needed for "video"): install it, or set "ffmpeg" in the config to its path',
     video: 'video',
     noShots: 'No matching shots.',
@@ -66,6 +67,7 @@ const MSG = {
     noLabel: (l) => `label kolom tidak ditemukan: ${l}`,
     unknownKey: (k) => `PERINGATAN key "${k}" tidak dikenal (salah ketik?), diabaikan`,
     reusedLogin: (n) => `      (sesi "${n}": login tersimpan dipakai ulang)`,
+    loginNotReused: (n, why) => `      (sesi "${n}": login tersimpan tidak bisa dipakai, login ulang: ${why})`,
     noFfmpeg: 'ffmpeg tidak ditemukan (dibutuhkan "video"): pasang ffmpeg, atau isi "ffmpeg" di konfigurasi dengan path-nya',
     video: 'video',
     noShots: 'Tidak ada shot yang cocok.',
@@ -337,7 +339,9 @@ async function restoreLogin(page, name, steps) {
     await page.waitForSelector(verify, { visible: true, timeout: 5000 });
     console.log(T.reusedLogin(name));
     return true;
-  } catch {
+  } catch (e) {
+    // Say why, so an expired or rejected login is not a silent extra login (and can be diagnosed).
+    console.log(T.loginNotReused(name, String(e.message || e).split('\n')[0]));
     fs.rmSync(file, { force: true });
     return false;
   }

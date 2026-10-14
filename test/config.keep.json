@@ -1,9 +1,10 @@
 {
+  "base": "{{TEST_BASE}}",
   "keepLogin": 60,
   "out": "output",
   "sessions": {
     "user": [
-      { "open": "./page.html" },
+      { "open": "/page.html" },
       { "type": "input[type=email]", "text": "user@example.com" },
       { "type": "input[type=password]", "text": "{{TEST_PASSWORD}}" },
       { "click": "#login button" },
