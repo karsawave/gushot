@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Cascade test</title>
+<!-- Mimics the ITSM asset form, where `fill` first went wrong on a real app:
+     - Code -> Category -> Model are chained dropdowns reloaded over AJAX (served by test/run.cjs, 400 ms late).
+     - Category starts with the full list; choosing a Code rebuilds it, and resets it when the Code maps
+       to several categories. Filling Category before that reload finishes loses the choice.
+     - "LAPTOP / NOTEBOOK" is listed above "LAPTOP", and "THINKPAD E14" above "THINKPAD".
+     - "Go-live Date" only appears 700 ms after the APPLICATION category is set (no network involved). -->
+<style>
+  body { font: 16px sans-serif; padding: 24px; }
+  .row { display: flex; gap: 12px; margin: 10px 0; align-items: center; }
+  .row label { width: 140px; }
+  .app-only { display: none; }
+  #status { margin-top: 16px; font: 14px monospace; }
+</style>
+<div class="row"><label for="code">Code</label>
+  <select id="code"><option value="">--</option><option value="A">A - Applications</option><option value="B">B - Notebooks</option></select></div>
+<div class="row"><label for="cat">Category</label>
+  <select id="cat"><option value="">--</option><option value="2">LAPTOP / NOTEBOOK</option><option value="1">LAPTOP</option><option value="9">APPLICATION</option></select></div>
+<div class="row"><label for="model">Model</label><select id="model"><option value="">--</option></select></div>
+<div class="row app-only"><label for="golive">Go-live Date</label><input id="golive" type="date"></div>
+<div id="status"></div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const fill = (sel, rows) => { sel.innerHTML = '<option value="">--</option>' + rows.map((r) => `<option value="${r.v}">${r.t}</option>`).join(''); };
+  const show = () => { $('status').textContent = `code=${$('code').value};cat=${$('cat').selectedOptions[0]?.text};model=${$('model').selectedOptions[0]?.text};golive=${$('golive').value}`; };
+  $('code').addEventListener('change', async () => {
+    const rows = await (await fetch(`/api/categories?code=${$('code').value}`)).json();
+    fill($('cat'), rows);
+    if (rows.length === 1) $('cat').value = rows[0].v;
+    $('cat').dispatchEvent(new Event('change'));
+  });
+  $('cat').addEventListener('change', async () => {
+    const isApp = $('cat').selectedOptions[0]?.text === 'APPLICATION';
+    setTimeout(() => { document.querySelector('.app-only').style.display = isApp ? 'flex' : 'none'; }, 700);
+    fill($('model'), await (await fetch(`/api/models?cat=${$('cat').value}`)).json());
+    show();
+  });
+  document.addEventListener('change', show);
+  document.addEventListener('input', show);
+</script>

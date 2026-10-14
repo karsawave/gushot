@@ -192,8 +192,11 @@ const settle = (page, ms = 400) => page.waitForNetworkIdle({ idleTime: ms, timeo
 async function choose(page, handle, value, timeout) {
   const ok = await page.waitForFunction((e, v) => {
     const t = String(v).trim().toLowerCase();
+    const text = (x) => x.text.trim().toLowerCase();
+    // Exact text before "starts with", so "LAPTOP" does not pick "LAPTOP / NOTEBOOK" listed above it.
     const o = [...e.options].find((x) => x.value === String(v))
-      || [...e.options].find((x) => x.value && x.text.trim().toLowerCase().startsWith(t));
+      || [...e.options].find((x) => x.value && text(x) === t)
+      || [...e.options].find((x) => x.value && text(x).startsWith(t));
     if (!o) return false;
     e.value = o.value;
     e.dispatchEvent(new Event('input', { bubbles: true }));
@@ -205,32 +208,30 @@ async function choose(page, handle, value, timeout) {
 
 // { "fill": { "Asset Name": "Laptop", "Supplier": "PT Sinar Jaya", "Active": true } }: find each field
 // by its visible <label> text (inside `within`, else inside an open modal, else the page) and fill it.
+// Real forms change while they are filled: a choice can reveal more fields, or reload the options of
+// the next dropdown over AJAX (Asset Code -> Category -> Model). So each label is waited for, and
+// after each field the page's network requests are allowed to finish before the next one.
 async function fillByLabel(page, fields, within, timeout) {
   const missing = [];
   for (const [label, value] of Object.entries(fields)) {
-    const h = (await page.evaluateHandle((lbl, root) => {
-      const norm = (x) => x.replace(/\*/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-      const visible = (e) => e.getClientRects().length > 0;
-      const scope = (root && document.querySelector(root))
-        || [...document.querySelectorAll('.modal.show, dialog[open]')].find(visible) || document;
-      const labels = [...scope.querySelectorAll('label')].filter(visible);
-      const want = norm(lbl);
-      const L = labels.find((x) => norm(x.textContent) === want) || labels.find((x) => norm(x.textContent).startsWith(want));
-      if (!L) return null;
-      if (L.control) return L.control;
-      for (let n = L.parentElement, i = 0; n && i < 3; n = n.parentElement, i++) {
-        const c = n.querySelector('input:not([type=hidden]), select, textarea');
-        if (c) return c;
-      }
-      return null;
-    }, label, within || null)).asElement();
+    const until = Date.now() + (timeout ?? 15000);
+    let h = null;
+    for (;;) {
+      h = (await findByLabel(page, label, within)).asElement();
+      if (h || Date.now() > until) break;
+      await sleep(250);
+    }
     if (!h) { missing.push(label); continue; }
-    const kind = await h.evaluate((e) => (e.tagName === 'SELECT' ? 'select'
+    const kind = await h.evaluate((e) => (e._flatpickr ? 'picker' : e.tagName === 'SELECT' ? 'select'
       : ['checkbox', 'radio'].includes(e.type) ? 'check'
         : e.readOnly || ['date', 'datetime-local', 'time', 'month', 'week', 'color', 'range'].includes(e.type) ? 'set' : 'type'));
     if (kind === 'select') await choose(page, h, value, timeout);
     else if (kind === 'check') await h.evaluate((e, v) => { if (e.checked !== !!v) e.click(); }, value);
-    else if (kind === 'set') {
+    else if (kind === 'picker') {
+      // flatpickr turns date fields into text fields that open a calendar on focus; typing there
+      // left the calendar open over the form in the image. Use its API and keep it closed.
+      await h.evaluate((e, v) => { e._flatpickr.setDate(v, true); e._flatpickr.close(); }, String(value));
+    } else if (kind === 'set') {
       await h.evaluate((e, v) => {
         e.value = v;
         e.dispatchEvent(new Event('input', { bubbles: true }));
@@ -239,9 +240,30 @@ async function fillByLabel(page, fields, within, timeout) {
     } else {
       await h.evaluate((e) => { e.value = ''; e.focus(); });
       await h.type(String(value));
+      await h.evaluate((e) => e.blur()); // close autocomplete lists and pickers that open on focus
     }
+    await settle(page, 300);
   }
   if (missing.length) throw new Error(T.noLabel(missing.join(', ')));
+}
+
+function findByLabel(page, label, within) {
+  return page.evaluateHandle((lbl, root) => {
+    const norm = (x) => x.replace(/\*/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const visible = (e) => e.getClientRects().length > 0;
+    const scope = (root && document.querySelector(root))
+      || [...document.querySelectorAll('.modal.show, dialog[open]')].find(visible) || document;
+    const labels = [...scope.querySelectorAll('label')].filter(visible);
+    const want = norm(lbl);
+    const L = labels.find((x) => norm(x.textContent) === want) || labels.find((x) => norm(x.textContent).startsWith(want));
+    if (!L) return null;
+    if (L.control) return L.control;
+    for (let n = L.parentElement, i = 0; n && i < 3; n = n.parentElement, i++) {
+      const c = n.querySelector('input:not([type=hidden]), select, textarea');
+      if (c) return c;
+    }
+    return null;
+  }, label, within || null);
 }
 
 // One step = one object with one action key. See README for the list.

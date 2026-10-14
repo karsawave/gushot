@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+Found while redoing the asset management guide of a real app with `fill`:
+
+- `fill` waits for a label to appear (up to `timeout`), so fields revealed by an earlier choice are found. An application form showed "Application Type" only after its category loaded.
+- `fill` lets the page's network requests finish after each field, so chained dropdowns that reload over AJAX (Asset Code -> Category -> Model) are ready before the next field. Before, Category could be chosen and then wiped by the reload.
+- `fill` sets date fields that use flatpickr through its API and keeps the calendar closed, and takes the focus off typed fields; before, an open calendar covered the Vendor and Supplier fields in the image.
+- SKILL.md: images too tall to read once scaled into a PDF: crop to the part the step discusses, or close the sections it does not.
+- `select` and `fill` prefer an option whose text matches exactly over one that only starts with the value: `"LAPTOP"` no longer picks "LAPTOP / NOTEBOOK" listed above it.
+
 ## 1.2.1 (2026-10-14)
 
 - SKILL.md: trees, accordions, tabs, and `<details>` that are closed by default (often loaded by AJAX when opened) must be opened and waited for before the capture. Found on a real app where an infrastructure map was captured collapsed.

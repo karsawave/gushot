@@ -40,9 +40,27 @@
     const s = document.getElementById('supplier');
     for (const [v, t] of [['5', 'PT Sinar Jaya'], ['6', 'CV Multi Skindo']]) s.add(new Option(t, v));
   }, 800);
+  // A stand-in for flatpickr, as set up on a real app: the date field becomes a text field that opens a
+  // calendar on focus, and exposes the _flatpickr API. Typing into it would leave the calendar open.
+  (() => {
+    const el = document.getElementById('date');
+    el.type = 'text';
+    const cal = document.createElement('div');
+    cal.id = 'fake-calendar';
+    cal.hidden = true;
+    cal.textContent = 'October 2026 calendar';
+    cal.style.cssText = 'position:absolute;left:200px;top:110px;width:260px;height:180px;background:#fff;border:1px solid #888;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+    document.body.appendChild(cal);
+    el.addEventListener('focus', () => { cal.hidden = false; });
+    el._flatpickr = {
+      setDate(v, trigger) { el.value = v; if (trigger) el.dispatchEvent(new Event('change', { bubbles: true })); },
+      close() { cal.hidden = true; },
+    };
+  })();
   const show = () => {
     const v = (id) => document.getElementById(id);
     v('status').textContent = `name=${v('name').value};supplier=${v('supplier').value};date=${v('date').value};`
+      + `cal=${v('fake-calendar').hidden ? 'closed' : 'open'};`
       + `active=${v('active').checked};reason=${v('reason').value};name2=${v('name2').value}`;
   };
   document.addEventListener('input', show);

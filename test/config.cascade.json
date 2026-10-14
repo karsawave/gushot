@@ -1,0 +1,16 @@
+{
+  "base": "{{TEST_BASE}}",
+  "out": "output",
+  "shots": [
+    { "name": "x01_chained_dropdowns", "url": "/cascade.html",
+      "steps": [
+        { "fill": { "Code": "B", "Category": "LAPTOP", "Model": "THINKPAD" } },
+        { "waitText": "code=B;cat=LAPTOP;model=THINKPAD;" }
+      ] },
+    { "name": "x02_field_revealed_later", "url": "/cascade.html",
+      "steps": [
+        { "fill": { "Code": "A", "Go-live Date": "2026-04-01" } },
+        { "waitText": "cat=APPLICATION;model=--;golive=2026-04-01" }
+      ] }
+  ]
+}

@@ -5,7 +5,7 @@
     { "name": "f01_fill_form", "url": "./form.html",
       "steps": [
         { "fill": { "Asset Name": "Laptop Staf IT", "Supplier": "PT Sinar", "Purchase Date": "2026-03-10", "Active": true } },
-        { "waitText": "name=Laptop Staf IT;supplier=5;date=2026-03-10;active=true" }
+        { "waitText": "name=Laptop Staf IT;supplier=5;date=2026-03-10;cal=closed;active=true" }
       ] },
     { "name": "f02_select_by_text", "url": "./form.html",
       "steps": [{ "select": "#supplier", "value": "CV Multi" }, { "waitText": "supplier=6" }] },
