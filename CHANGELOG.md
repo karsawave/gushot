@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 (2026-10-14)
 
 Found while redoing the asset management guide of a real app with `fill`:
 

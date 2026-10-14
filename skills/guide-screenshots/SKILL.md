@@ -4,7 +4,7 @@ description: Capture screenshots for web app user guides, tutorials, manuals, an
 license: MIT
 compatibility: Requires Node.js 18+, npm, a local Chrome or Edge, and shell access to run commands. Works with any agent that supports Agent Skills.
 metadata:
-  version: "1.2.1"
+  version: "1.3.0"
 ---
 
 # Guide screenshots
