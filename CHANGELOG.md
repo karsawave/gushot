@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- SKILL.md: trees, accordions, tabs, and `<details>` that are closed by default (often loaded by AJAX when opened) must be opened and waited for before the capture. Found on a real app where an infrastructure map was captured collapsed.
+
 ## 1.2.0 (2026-10-13)
 
 Fixes and steps found while using GuShot on a real app (36 screenshots for an asset management guide):

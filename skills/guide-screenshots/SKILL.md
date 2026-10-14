@@ -65,6 +65,7 @@ Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by the
 | Redirected back to login | session/cookie failed; check cookie domain, HTTPS vs HTTP |
 | `text "X" not found` | element not rendered yet: add `{ "wait": selector }` before it |
 | Cropped image / mid-animation | raise `delay`, or use `fullPage: true` |
+| Tree, accordion, tab, or `<details>` still closed in the image, or showing "Loading…" / "Expand to load" | the content is collapsed by default and often fetched by AJAX only when opened. Add a step that opens it (`click` the "Expand all" button or the item itself), then wait for the content: `{ "wait": "<selector of a loaded child>" }`, or a `js` step that waits until the loading text is gone. Open only the part the guide step talks about, so the image does not get too long. Check every shot of a tree, map, or menu page for this before reporting done |
 | Exit code 2 | dependency not installed: run the npm command above |
 
 Report to the user: OK/failed counts, files created, and any environment changes you made.
