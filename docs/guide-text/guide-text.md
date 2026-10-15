@@ -41,6 +41,8 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 
 ![Filling in a new order](screenshots/02_order_form.png)
 
+*Filling in a new order*
+
 2. Choose the Customer
 3. Choose the Item
 4. Enter the Quantity

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- New `--md <file>` writes a Markdown skeleton of the guide: per shot its `caption` as heading, the image, and the markers' step text as a numbered list. Rerun after a UI change and the text that belongs to the images comes back with them.
+- New `--md <file>` writes a Markdown skeleton of the guide: per shot its `caption` as heading, the image, the caption as an italic line under it, and the markers' step text as a numbered list. Rerun after a UI change and the text that belongs to the images comes back with them.
 - New shot key `caption` (alias `keterangan`) and highlight key `text` (alias `teks`): step text that goes into `--md` without being drawn on the image. `note` is used too.
 - New `replaceText` (root and shot, alias `gantiTeks`): swaps real text for sample text in the page and form fields before capturing, e.g. customer names. An empty replacement removes the text.
 - New `references/writing.md` for agents writing the guide text: kinds of subsection, when to add a flow diagram (Mermaid) and only if the project's builder renders it, one main scenario plus "Variation" subsections, when numbered markers are required, a project style file for language rules, `waitText` on every quoted label so `--check` catches renamed labels.

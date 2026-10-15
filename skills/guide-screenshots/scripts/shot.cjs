@@ -609,7 +609,7 @@ async function capture(page, s) {
       const file = s.video ? path.join(OUT, `${s.name}.${s.video === true ? 'mp4' : s.video}`) : outFile(s);
       const rel = path.relative(path.dirname(MD), file).split(path.sep).join('/');
       const notes = s.highlight.filter((h) => h.text || h.note).map((h, i) => `${h.label || i + 1}. ${h.text || h.note}`);
-      return [`## ${title}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
+      return [`## ${title}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(s.caption ? [`*${title}*`] : []), ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
     });
     fs.mkdirSync(path.dirname(MD), { recursive: true });
     fs.writeFileSync(MD, `${md.join('\n\n')}\n`);
