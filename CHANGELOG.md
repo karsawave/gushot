@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 (2026-10-15)
 
 - `--md` starts the skeleton with a line recording the run date and the `changed` and `new` shots, to copy into the guide's revision history.
 - `references/writing.md`: every guide gets a document control block (version, date, app version) and a revision history table, updated whenever images or text change. SKILL.md step 8 points to it.
