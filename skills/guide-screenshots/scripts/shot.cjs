@@ -2,9 +2,10 @@
 /**
  * GuShot (Guide User Shot): capture web app user-guide screenshots from a single JSON config.
  *
- *   node shot.cjs <config.json> [filter...] [--check]
+ *   node shot.cjs <config.json> [filter...] [--check] [--md <file>]
  *   filter  = only shots whose name contains that text
  *   --check = run every step but save no images (catch broken selectors)
+ *   --md    = also write a Markdown guide skeleton (caption, image, numbered notes per shot)
  *
  * Config format: see ../assets/config.example.json and ../references/REFERENCE.md.
  * Config keys are English; the Indonesian keys from v1 are accepted as aliases.
@@ -31,7 +32,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- messages (en primary, id secondary) ----------
 const MSG = {
   en: {
-    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check]',
+    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>]',
     envMissing: (k) => `Environment variable ${k} is not set`,
     noChrome: 'Chrome/Edge not found, set "chrome" in the config or the CHROME_PATH env',
     textNotFound: (t) => `text "${t}" not found`,
@@ -51,10 +52,11 @@ const MSG = {
     ok: 'OK   ', fail: 'FAIL ', checked: (n) => `${n} (checked, not saved)`,
     state: { new: 'new', changed: 'changed', same: 'unchanged' },
     changes: (c, n) => `Changed: ${c}, new: ${n}.`,
+    mdWritten: (f) => `Guide skeleton: ${f}`,
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
   },
   id: {
-    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check]',
+    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>]',
     envMissing: (k) => `Environment ${k} belum diisi`,
     noChrome: 'Chrome/Edge tidak ditemukan, isi "chrome" di konfigurasi atau env CHROME_PATH',
     textNotFound: (t) => `teks "${t}" tidak ditemukan`,
@@ -74,6 +76,7 @@ const MSG = {
     ok: 'OK   ', fail: 'GAGAL', checked: (n) => `${n} (diperiksa, tidak disimpan)`,
     state: { new: 'baru', changed: 'berubah', same: 'sama' },
     changes: (c, n) => `Berubah: ${c}, baru: ${n}.`,
+    mdWritten: (f) => `Kerangka panduan: ${f}`,
     done: (ok, bad, out) => `\nSelesai: ${ok} OK, ${bad} gagal. Hasil di ${out}`,
   },
 };
@@ -83,14 +86,14 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
-    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay' },
+    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
     gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
-  highlight: { catatan: 'note' },
+  highlight: { catatan: 'note', teks: 'text' },
 };
 const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
   ? Object.fromEntries(Object.entries(o).map(([k, v]) => [map[k] || k, v])) : o);
@@ -98,11 +101,11 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang sessions shots',
-  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText sessions shots',
+  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
-  highlight: 'selector label note',
+  highlight: 'selector label note text',
 };
 const warned = new Set();
 const check = (o, kind) => {
@@ -123,6 +126,8 @@ const step = (s) => {
 // ---------- config ----------
 const args = process.argv.slice(2);
 const CHECK = args.includes('--check');
+const mdAt = args.indexOf('--md');
+const MD = mdAt < 0 ? null : path.resolve(args.splice(mdAt, 2)[1] || 'guide.md');
 const [configFile, ...filters] = args.filter((a) => a !== '--check');
 if (!configFile) { console.error(T.usage); process.exit(1); }
 const configDir = path.dirname(path.resolve(configFile));
@@ -444,6 +449,19 @@ function shotCss(s) {
   return css.join('\n');
 }
 
+// replaceText: { "real text": "sample text" } from root and shot, in text and form fields.
+// Changes the DOM itself, so it lasts until the page is opened again.
+async function replaceText(page, s) {
+  const map = Object.entries({ ...cfg.replaceText, ...s.replaceText });
+  if (!map.length) return;
+  await page.evaluate((map) => {
+    const swap = (t) => map.reduce((acc, [a, b]) => acc.split(a).join(b), t);
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (w.nextNode()) { const t = swap(w.currentNode.nodeValue); if (t !== w.currentNode.nodeValue) w.currentNode.nodeValue = t; }
+    document.querySelectorAll('input, textarea').forEach((e) => { e.value = swap(e.value); });
+  }, map);
+}
+
 // video: true | "mp4" | "gif" | "webm". Records the shot's url + steps (with a pause after each
 // step so viewers can follow), then holds on the highlights. Needs ffmpeg.
 async function record(page, s) {
@@ -478,6 +496,7 @@ async function record(page, s) {
     if (s.url) await page.goto(absUrl(s.url), { waitUntil: 'networkidle2' });
     for (const l of s.steps) { await run(page, l); await sleep(700); }
     await settle(page, 600);
+    await replaceText(page, s);
     await annotate(page, s);
     await sleep(2500); // hold on the result; the screencast also lags a little behind the page
   } finally {
@@ -492,6 +511,7 @@ async function record(page, s) {
 async function capture(page, s) {
   await settle(page, 600);
   await sleep(s.delay ?? cfg.delay ?? 500);
+  await replaceText(page, s);
   const css = shotCss(s);
   const tag = css ? await page.addStyleTag({ content: css }) : null;
   const file = outFile(s);
@@ -582,6 +602,19 @@ async function capture(page, s) {
   }
 
   await browser.close();
+  if (MD) {
+    // One section per shot that worked: caption, image, then the highlight texts (or notes) as numbered steps.
+    const md = shots.filter((s) => !failed.includes(s.name)).map((s) => {
+      const title = s.caption || s.name;
+      const file = s.video ? path.join(OUT, `${s.name}.${s.video === true ? 'mp4' : s.video}`) : outFile(s);
+      const rel = path.relative(path.dirname(MD), file).split(path.sep).join('/');
+      const notes = s.highlight.filter((h) => h.text || h.note).map((h, i) => `${h.label || i + 1}. ${h.text || h.note}`);
+      return [`## ${title}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
+    });
+    fs.mkdirSync(path.dirname(MD), { recursive: true });
+    fs.writeFileSync(MD, `${md.join('\n\n')}\n`);
+    console.log(T.mdWritten(path.relative(process.cwd(), MD)));
+  }
   console.log(T.done(shots.length - failed.length, failed.length, OUT));
   if (!CHECK) console.log(T.changes(counts.changed, counts.new));
   process.exit(failed.length ? 1 : 0);

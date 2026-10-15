@@ -13,6 +13,7 @@ Tutorials, in the order you will probably need them. Each folder has the tutoria
 | [4. Keeping screenshots current](maintenance/update-after-ui-change.md) | rerun after a UI change, see what changed, catch broken selectors in CI |
 | [5. Using it with an AI agent](ai-agents/use-with-ai-agents.md) | let Claude Code, Codex, Copilot, Cursor, or Gemini CLI write and run the config |
 | [6. Recording a flow as a video](video/record-a-flow.md) | record steps as GIF/MP4 with blur kept on, and skip the login on later runs |
+| [7. Keeping the guide text with the screenshots](guide-text/guide-text.md) | captions and step text in the config, a Markdown skeleton with `--md`, sample names with `replaceText` |
 
 Every key and step is listed in [REFERENCE.md](../skills/guide-screenshots/references/REFERENCE.md).
 

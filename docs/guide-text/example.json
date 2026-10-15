@@ -1,0 +1,31 @@
+{
+  "out": "screenshots",
+  "viewport": { "width": 1100, "height": 640 },
+  "alwaysBlur": [".phone", ".contact"],
+  "replaceText": { "Budi Santoso": "Sample Customer A", "Siti Aminah": "Sample Customer B", "Andi Wijaya": "Sample Customer C", "Dewi Lestari": "Sample Customer D" },
+  "sessions": {
+    "admin": [
+      { "open": "../../demo/app.html" },
+      { "type": "#email", "text": "rina@kedai.example" },
+      { "type": "#password", "text": "{{APP_PASSWORD}}" },
+      { "click": "#login button" },
+      { "run": "node -e \"require('fs').appendFileSync('mail.log','Your Kedai code: 482913\\n')\"" },
+      { "otp": { "file": "mail.log", "pattern": "Kedai code: (\\d{6})", "into": "#code", "submit": { "clickText": "Verify" } } },
+      { "wait": "#app" }
+    ]
+  },
+  "shots": [
+    { "name": "01_orders", "session": "admin", "caption": "The Recent orders page",
+      "steps": [{ "waitText": "Recent orders" }, { "waitText": "New order" }],
+      "highlight": [{ "selector": "#new-order", "label": "1", "note": "Click New order" }] },
+    { "name": "02_order_form", "session": "admin", "caption": "Filling in a new order",
+      "steps": [{ "click": "#new-order" }, { "wait": ".modal" }, { "waitText": "Save order" }],
+      "element": ".modal", "padding": 24,
+      "highlight": [
+        { "selector": "#cust", "label": "2", "text": "Choose the Customer" },
+        { "selector": "#menu", "label": "3", "text": "Choose the Item" },
+        { "selector": "#qty", "label": "4", "text": "Enter the Quantity" },
+        { "selector": ".modal .primary", "label": "5", "text": "Click Save order" }
+      ] }
+  ]
+}

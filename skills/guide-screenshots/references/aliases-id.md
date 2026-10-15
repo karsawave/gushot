@@ -23,6 +23,8 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | `jarak` | `padding` | ruang di sekitar `element` (px) |
 | `sembunyikan` | `hide` | selector yang disembunyikan |
 | `sorot` | `highlight` | beri kotak merah |
+| `keterangan` | `caption` | keterangan gambar (dipakai `--md`) |
+| `gantiTeks` | `replaceText` | ganti teks asli dengan contoh di halaman |
 | `sesiBaru` | `freshSession` | buka ulang sesi di konteks browser baru dulu |
 | `buka` | `open` | buka halaman |
 | `ketik` + `teks` | `type` + `text` | ketik ke input |
@@ -37,3 +39,4 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 | `perintah` | `run` | jalankan perintah shell |
 | `otp`: `pola`, `ke`, `kirim`, `coba` | `otp`: `pattern`, `into`, `submit`, `tries` | isi OTP dari file |
 | `highlight`: `catatan` | `highlight`: `note` | teks keterangan di samping kotak sorot |
+| `highlight`: `teks` | `highlight`: `text` | teks langkah untuk `--md` saja, tidak digambar |

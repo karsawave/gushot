@@ -15,6 +15,7 @@ All paths below are relative to **this skill's folder** (the folder containing t
 - Example config: `assets/config.example.json`.
 - Full key reference: `references/REFERENCE.md`. Read it only when you need an option not listed here.
 - Indonesian key aliases: `references/aliases-id.md`.
+- Writing the guide text around the screenshots: `references/writing.md`. Read it before writing or editing guide text.
 
 First run only: `npm install --omit=dev --prefix "<SKILL>/scripts"`. The script exits with code 2 and prints this command if the dependency is missing.
 
@@ -28,8 +29,8 @@ Do not capture screenshots by hand through a browser tool and do not write a new
 
 ## Key summary
 
-Root: `base`, `scale` (2 = sharp for PDF/print), `keepLogin` (minutes; skip login/OTP on later runs), `ffmpeg`, `out`, `viewport`, `theme`, `alwaysBlur`, `css`, `delay`, `sessions` ({ name: [steps] }), `shots`.
-Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context; elements taller than the viewport, such as long modals, are captured whole), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label, note }`: numbered badge matching the guide's step numbers, short callout text), `video` (`true`/`"gif"`/`"webm"`: record url + steps instead of a PNG; needs ffmpeg), `viewport`, `freshSession`, `delay`.
+Root: `base`, `scale` (2 = sharp for PDF/print), `keepLogin` (minutes; skip login/OTP on later runs), `ffmpeg`, `out`, `viewport`, `theme`, `alwaysBlur`, `replaceText`, `css`, `delay`, `sessions` ({ name: [steps] }), `shots`.
+Shot: `name`, `session`, `url`, `steps`, `element` (+`padding` px of context; elements taller than the viewport, such as long modals, are captured whole), `fullPage`, `blur`, `hide`, `highlight` (selectors, or `{ selector, label, note, text }`: numbered badge matching the guide's step numbers, short callout text), `video` (`true`/`"gif"`/`"webm"`: record url + steps instead of a PNG; needs ffmpeg), `viewport`, `freshSession`, `delay`, `caption` (image caption, used by `--md`), `replaceText` ({ "real text": "sample" } in page text and fields; `""` removes it).
 Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by their `<label>`, in the order written; waits for fields that appear later and for AJAX-reloaded dropdowns between fields; checkboxes take `true`/`false`, a checkbox in a list is filled by its own label; + optional `within`), `click`, `clickText` (+`within`), `select`+`value` (value or start of the option text; waits for options loaded by AJAX; works with Select2), `cookie` ({ `name`, `value` }: reuse an existing session when the login cannot be automated, e.g. SSO or captcha; value from env), `press`, `wait` (ms or selector), `waitText`, `scrollTo`, `js`, `run` (+`cwd`), `otp` { `file`, `pattern` (regex, group 1 = code), `into`, `submit` }.
 
 ## Workflow
@@ -45,15 +46,15 @@ Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by the
    - Do not write "(marker 1)" in the text; the matching number is enough.
    - Highlight what the reader sees as one control: the whole field with its icon or button (e.g. `.input-group`, the form row), not the bare `input` inside it.
    - When a step is about one form or modal, crop to it (`element` + `padding` ~24) so markers stay readable when the image is scaled down in the document. Whole-page shots are for "where is this menu" steps.
-   - Write the guide text and the config together, step by step, and check each image against its step list before moving on.
-5. **Sensitive data must be blurred** (`blur`): passwords, PINs, OTPs, 2FA QR codes/secrets, tokens, real order/record IDs, people's names and contacts. Put app-wide selectors in `alwaysBlur`. Blur also applies to every frame of a `video`. `keepLogin` writes live session cookies to `.gushot/` next to the config: never commit that folder (it has its own `.gitignore`), and do not enable `keepLogin` on shared machines.
+   - Write the guide text and the config together, step by step, and check each image against its step list before moving on. Put the step text in the marker's `text` (only written by `--md`) or `note` (also drawn on the image) and the image caption in `caption`, so both live only in the config; follow `references/writing.md`.
+5. **Sensitive data must be blurred** (`blur`): passwords, PINs, OTPs, 2FA QR codes/secrets, tokens, real order/record IDs, people's names and contacts. Put app-wide selectors in `alwaysBlur`. Where a blurred name would make the step unclear, swap the real text for a sample with `replaceText` instead. Blur also applies to every frame of a `video`. `keepLogin` writes live session cookies to `.gushot/` next to the config: never commit that folder (it has its own `.gitignore`), and do not enable `keepLogin` on shared machines.
 6. **Run**, preferably only the changed entries (filter = substring of `name`):
    ```bash
    node "<SKILL>/scripts/shot.cjs" <config.json> <filter>
    ```
-   Add `--check` to run the steps without saving images, e.g. to find selectors broken by a UI change.
+   Add `--check` to run the steps without saving images, e.g. to find selectors broken by a UI change. Add `--md <file>` to also write a Markdown skeleton (caption, image, numbered notes per shot) to copy into the guide.
    Passwords come from env (`{{APP_PASSWORD}}` in the config), never written in the JSON.
-7. **Check the output.** Every shot prints `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>`; only `new`/`changed` images need updating in the guide; exit code 1 means at least one failed. For `FAIL`, fix the selector/step and rerun only that shot. If you can view images, open 1-2 of the PNGs (not all) to confirm CSS loaded, the session is logged in, and blur applied. If you cannot view images, check that file sizes are not suspiciously small and ask the user to glance at one.
+7. **Check the output.** Every shot prints `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>`; only `new`/`changed` images need updating in the guide; exit code 1 means at least one failed. For `FAIL`, fix the selector/step and rerun only that shot. If you can view images, open every `new`/`changed` PNG to confirm CSS loaded, the session is logged in, and blur applied. If you cannot view images, check that file sizes are not suspiciously small and ask the user to glance at one.
 8. **Insert into the guide** (Markdown/HTML) and rebuild the PDF if the project has a builder for it.
 
 ## Common problems

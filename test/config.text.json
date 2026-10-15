@@ -1,0 +1,8 @@
+{
+  "out": "output",
+  "shots": [
+    { "name": "x01_login", "url": "./page.html", "caption": "Login page", "replaceText": { "Sign in": "Masuk" },
+      "highlight": [{ "selector": "input[type=email]", "note": "Enter your email" }, { "selector": "#login button", "label": "2", "text": "Click Masuk" }] },
+    { "name": "x02_text_still_replaced", "steps": [{ "waitText": "Masuk", "timeout": 2000 }] }
+  ]
+}

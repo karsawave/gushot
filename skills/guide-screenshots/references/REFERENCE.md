@@ -14,6 +14,7 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `viewport` | default `{ width: 1280, height: 900, deviceScaleFactor: scale }` |
 | `theme` | `light` / `dark` (prefers-color-scheme) |
 | `alwaysBlur` | CSS selectors blurred in every shot |
+| `replaceText` | `{ "real text": "sample text" }` swapped in every shot, in page text and form fields; `""` removes the text. Merged with the shot's own `replaceText` |
 | `blurStrength` | blur radius in px (default 6) |
 | `highlightColor` | highlight box color (default `#e11d48`) |
 | `css` | extra CSS while capturing (e.g. hide a debug bar) |
@@ -40,10 +41,12 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `fullPage` | `true` = whole page, not just the viewport |
 | `blur` | extra selectors to blur |
 | `hide` | selectors to hide |
-| `highlight` | elements marked with a red box (drawn on top of the page, so it stays sharp over blurred fields and is not cut off by the element's parents) (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen) |
+| `highlight` | elements marked with a red box (drawn on top of the page, so it stays sharp over blurred fields and is not cut off by the element's parents) (the button a guide step mentions): `["#save"]`, or with a numbered badge: `[{ "selector": "#name", "label": "1" }, { "selector": "#save", "label": "2" }]`. Add `"note": "Click to save"` for a short callout below the box (above it near the bottom of the screen). `"text"` is step text for `--md` only, not drawn: use it instead of `note` when callouts would crowd the image |
 | `viewport` | size for this shot only (e.g. mobile) |
 | `freshSession` | `true` = start the session again in a new browser context first (clean state). With `keepLogin`, a still-valid saved login is reused instead of logging in |
 | `delay` | extra ms before capturing |
+| `caption` | image caption; `--md` uses it as the heading and alt text (default: `name`) |
+| `replaceText` | `{ "real text": "sample text" }` for this shot, on top of the root one. Runs after `steps`, just before the capture (or before the end of a `video`). It changes the page itself, so the next shot in the same session still shows the sample text unless it opens a `url` |
 
 ## Steps
 
@@ -74,4 +77,5 @@ OTP: the code is capture group 1 of the last `pattern` match written to `file` a
 - A `video` shot prints `OK <file> (video)`; videos are not compared with the previous file.
 - `WARN unknown key "x"` (`PERINGATAN` with `lang: id`): a config key the tool does not know, most likely a typo; it is ignored. Keys starting with `_` or `$` are allowed for comments.
 - `--check` anywhere on the command line runs every step and checks that `element` exists, but saves no images. Use it after UI changes, or in CI, to find broken selectors.
+- `--md <file>` also writes a Markdown skeleton, one section per successful shot: `## caption`, the image (path relative to the Markdown file), and each `highlight` `text` (or `note`) as a numbered list (number = `label`, or the order). The file is overwritten each run; copy from it into the guide. Works with `--check` too.
 - Exit 0 = all OK, 1 = at least one shot failed (others still run), 2 = dependency missing.

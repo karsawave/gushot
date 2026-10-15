@@ -133,6 +133,14 @@ const cases = [
     const r = await shotAsync({ TEST_BASE: base }, 'config.cascade.json');
     return r.status === 0 && r.out.includes('Done: 2 OK, 0 failed') || r.out;
   })],
+  // x02 only finds "Masuk" if x01's replaceText changed the page (it stays until the next open).
+  ['replaceText and --md guide skeleton', () => {
+    const md = path.join(__dirname, 'output', 'guide.md');
+    fs.rmSync(md, { force: true });
+    const r = shot('config.text.json', '--check', '--md', 'output/guide.md');
+    const want = '## Login page\n\n![Login page](x01_login.png)\n\n1. Enter your email\n2. Click Masuk\n\n## x02_text_still_replaced';
+    return r.status === 0 && fs.existsSync(md) && fs.readFileSync(md, 'utf8').startsWith(want) || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);
