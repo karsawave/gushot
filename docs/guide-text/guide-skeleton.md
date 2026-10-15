@@ -1,3 +1,5 @@
+> GuShot run 2026-10-15: no image changes
+
 ## 01_orders
 
 ![The Recent orders page](screenshots/01_orders.png)

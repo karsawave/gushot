@@ -49,6 +49,8 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 5. Click Save order
 ```
 
+The skeleton starts with a line such as `> GuShot run 2026-10-15: changed: 02_order_form`. Use it for the guide's revision history: raise the document version and add a row for the sections that use those images.
+
 The skeleton is overwritten on every run. Copy from it into your real guide and write the rest (goal, result, explanations) there. After a UI change, rerun and compare the skeleton with git to see which steps changed.
 
 | 01_orders | 02_order_form |

@@ -53,6 +53,8 @@ const MSG = {
     state: { new: 'new', changed: 'changed', same: 'unchanged' },
     changes: (c, n) => `Changed: ${c}, new: ${n}.`,
     mdWritten: (f) => `Guide skeleton: ${f}`,
+    mdRun: (d, c, n) => `> GuShot run ${d}: ${[c.length && `changed: ${c.join(', ')}`, n.length && `new: ${n.join(', ')}`].filter(Boolean).join('; ') || 'no image changes'}`,
+    mdRunCheck: (d) => `> GuShot run ${d} (--check, no images saved)`,
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
   },
   id: {
@@ -77,6 +79,8 @@ const MSG = {
     state: { new: 'baru', changed: 'berubah', same: 'sama' },
     changes: (c, n) => `Berubah: ${c}, baru: ${n}.`,
     mdWritten: (f) => `Kerangka panduan: ${f}`,
+    mdRun: (d, c, n) => `> Run GuShot ${d}: ${[c.length && `berubah: ${c.join(', ')}`, n.length && `baru: ${n.join(', ')}`].filter(Boolean).join('; ') || 'tidak ada gambar yang berubah'}`,
+    mdRunCheck: (d) => `> Run GuShot ${d} (--check, tidak ada gambar yang disimpan)`,
     done: (ok, bad, out) => `\nSelesai: ${ok} OK, ${bad} gagal. Hasil di ${out}`,
   },
 };
@@ -567,6 +571,7 @@ async function capture(page, s) {
   const pages = {}; // one logged-in tab per session, reused across shots
   const failed = [];
   const counts = { new: 0, changed: 0 }; // tells the guide writer which images to re-insert
+  const touched = { new: [], changed: [] }; // the same, by name, for the --md revision line
 
   for (const s of shots) {
     const key = s.session || '_guest';
@@ -588,7 +593,7 @@ async function capture(page, s) {
       if (CHECK) console.log(T.ok, T.checked(s.name));
       else {
         const state = before === null ? 'new' : before === hashOf(file) ? 'same' : 'changed';
-        if (state !== 'same') counts[state]++;
+        if (state !== 'same') { counts[state]++; touched[state].push(s.name); }
         console.log(T.ok, path.relative(process.cwd(), file), `(${T.state[state]})`);
       }
       if (s.viewport) await page.setViewport(VIEWPORT);
@@ -612,7 +617,9 @@ async function capture(page, s) {
       return [`## ${s.name}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(s.caption ? [`*${title}*`] : []), ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
     });
     fs.mkdirSync(path.dirname(MD), { recursive: true });
-    fs.writeFileSync(MD, `${md.join('\n\n')}\n`);
+    const day = new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
+    const run = CHECK ? T.mdRunCheck(day) : T.mdRun(day, touched.changed, touched.new);
+    fs.writeFileSync(MD, `${[run, ...md].join('\n\n')}\n`);
     console.log(T.mdWritten(path.relative(process.cwd(), MD)));
   }
   console.log(T.done(shots.length - failed.length, failed.length, OUT));

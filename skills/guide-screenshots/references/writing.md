@@ -41,6 +41,13 @@ Every button, menu, or field name the text quotes must match the screen. For eac
 
 Run with `--md guide-skeleton.md` to get, per shot: its name as heading, image, the caption as an italic line under it, numbered steps. Keep the `shots` in the config in the same order as the images in the guide, so the skeleton reads in guide order. The file is overwritten on every run, so do not edit it: copy from it into the real guide, and add the goal, result, and explanation there. After a UI change, rerun, diff the skeleton, and update only the parts that changed.
 
+## Version and revision history
+
+- Every guide starts with a document control block: document version, date, and the version of the app it describes. Below it, a "Revision history" table: version, date, sections changed, reason.
+- Whenever images come back `changed` or `new`, or the text changes, raise the version, update the date, and add one row. The first line of the `--md` skeleton lists the changed and new shots of that run; map them to the sections that use them.
+- Add rows, never rewrite old ones.
+- The numbering and the labels (for example "Versi 1.1", "Riwayat Revisi") come from the project's style file. Without one: `1.0` for the first issue, `+0.1` for an update, `+1.0` for a rewrite.
+
 ## Check before you finish
 
 - Open every image reported `new` or `changed`, not a sample: markers on the right control, numbers match the text, blur and `replaceText` applied, nothing cut off.

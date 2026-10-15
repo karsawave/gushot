@@ -49,6 +49,8 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 5. Click Save order
 ```
 
+Kerangka diawali baris seperti `> GuShot run 2026-10-15: changed: 02_order_form` (dengan `"lang": "id"`: `> Run GuShot 2026-10-15: berubah: 02_order_form`). Pakai baris ini untuk riwayat revisi panduan: naikkan versi dokumen dan tambahkan satu baris untuk bagian yang memakai gambar tersebut.
+
 Kerangka ini ditimpa setiap kali dijalankan. Salin isinya ke panduan yang sebenarnya, lalu tulis bagian lainnya (tujuan, hasil, penjelasan) di sana. Setelah UI berubah, jalankan ulang dan bandingkan kerangka dengan git untuk melihat langkah mana yang berubah.
 
 | 01_orders | 02_order_form |

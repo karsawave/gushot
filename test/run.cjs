@@ -136,10 +136,11 @@ const cases = [
   // x02 only finds "Masuk" if x01's replaceText changed the page (it stays until the next open).
   ['replaceText and --md guide skeleton', () => {
     const md = path.join(__dirname, 'output', 'guide.md');
-    fs.rmSync(md, { force: true });
-    const r = shot('config.text.json', '--check', '--md', 'output/guide.md');
+    for (const f of [md, 'x01_login.png', 'x02_text_still_replaced.png']) fs.rmSync(path.resolve(__dirname, 'output', f), { force: true });
+    const r = shot('config.text.json', '--md', 'output/guide.md');
+    const run = `> GuShot run ${new Date().toLocaleDateString('sv')}: new: x01_login, x02_text_still_replaced\n\n`;
     const want = '## x01_login\n\n![Login page](x01_login.png)\n\n*Login page*\n\n1. Enter your email\n2. Click Masuk\n\n## x02_text_still_replaced';
-    return r.status === 0 && fs.existsSync(md) && fs.readFileSync(md, 'utf8').startsWith(want) || r.out;
+    return r.status === 0 && fs.existsSync(md) && fs.readFileSync(md, 'utf8').startsWith(run + want) || r.out;
   }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))

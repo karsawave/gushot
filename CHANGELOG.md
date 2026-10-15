@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `--md` starts the skeleton with a line recording the run date and the `changed` and `new` shots, to copy into the guide's revision history.
+- `references/writing.md`: every guide gets a document control block (version, date, app version) and a revision history table, updated whenever images or text change. SKILL.md step 8 points to it.
+
 ## 1.4.0 (2026-10-15)
 
 - New `--md <file>` writes a Markdown skeleton of the guide: per shot a heading with its `name`, the image with its `caption` as alt text and as an italic line under it, and the markers' step text as a numbered list. Rerun after a UI change and the text that belongs to the images comes back with them.

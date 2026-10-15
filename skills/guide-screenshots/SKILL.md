@@ -55,7 +55,7 @@ Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by the
    Add `--check` to run the steps without saving images, e.g. to find selectors broken by a UI change. Add `--md <file>` to also write a Markdown skeleton (caption, image, numbered notes per shot) to copy into the guide.
    Passwords come from env (`{{APP_PASSWORD}}` in the config), never written in the JSON.
 7. **Check the output.** Every shot prints `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>`; only `new`/`changed` images need updating in the guide; exit code 1 means at least one failed. For `FAIL`, fix the selector/step and rerun only that shot. If you can view images, open every `new`/`changed` PNG to confirm CSS loaded, the session is logged in, and blur applied. If you cannot view images, check that file sizes are not suspiciously small and ask the user to glance at one.
-8. **Insert into the guide** (Markdown/HTML) and rebuild the PDF if the project has a builder for it.
+8. **Insert into the guide** (Markdown/HTML), raise the document version and add a revision row (see `references/writing.md`), and rebuild the PDF if the project has a builder for it.
 
 ## Common problems
 
