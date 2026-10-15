@@ -39,7 +39,7 @@ Every button, menu, or field name the text quotes must match the screen. For eac
 
 ## Use the skeleton
 
-Run with `--md guide-skeleton.md` to get, per shot: caption as heading, image, the caption as an italic line under it, numbered steps. The file is overwritten on every run, so do not edit it: copy from it into the real guide, and add the goal, result, and explanation there. After a UI change, rerun, diff the skeleton, and update only the parts that changed.
+Run with `--md guide-skeleton.md` to get, per shot: its name as heading, image, the caption as an italic line under it, numbered steps. Keep the `shots` in the config in the same order as the images in the guide, so the skeleton reads in guide order. The file is overwritten on every run, so do not edit it: copy from it into the real guide, and add the goal, result, and explanation there. After a UI change, rerun, diff the skeleton, and update only the parts that changed.
 
 ## Check before you finish
 

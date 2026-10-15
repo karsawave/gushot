@@ -117,7 +117,7 @@ Yang paling sering dipakai:
 | Di dalam shot | Fungsi |
 |---|---|
 | `highlight` | memberi kotak merah pada elemen yang dibahas di langkah panduan; `{ "selector": "#save", "label": "2", "note": "Simpan di sini" }` menambah nomor langkah dan teks keterangan |
-| `caption` | keterangan gambar; `--md` menuliskannya sebagai judul. `"text": "Klik Simpan"` pada sorotan adalah teks langkah khusus `--md`, tidak digambar |
+| `caption` | keterangan gambar; `--md` menuliskannya sebagai teks alt dan baris miring di bawah gambar. `"text": "Klik Simpan"` pada sorotan adalah teks langkah khusus `--md`, tidak digambar |
 | `replaceText` | mengganti teks asli dengan teks contoh sebelum memotret: `{ "Budi Santoso": "Pelanggan Contoh" }` (bisa juga di bagian atas, untuk semua shot) |
 | `blur` | mem-blur elemen tambahan di shot ini (`alwaysBlur` berlaku untuk semua shot) |
 | `element` | memotret satu elemen saja, misalnya modal atau form; tambahkan `"padding": 16` supaya sebagian halaman di sekitarnya ikut terlihat |

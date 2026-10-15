@@ -37,7 +37,7 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 [guide-skeleton.md](guide-skeleton.md) berisi satu bagian per shot:
 
 ```markdown
-## Filling in a new order
+## 02_order_form
 
 ![Filling in a new order](screenshots/02_order_form.png)
 

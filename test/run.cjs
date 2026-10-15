@@ -138,7 +138,7 @@ const cases = [
     const md = path.join(__dirname, 'output', 'guide.md');
     fs.rmSync(md, { force: true });
     const r = shot('config.text.json', '--check', '--md', 'output/guide.md');
-    const want = '## Login page\n\n![Login page](x01_login.png)\n\n*Login page*\n\n1. Enter your email\n2. Click Masuk\n\n## x02_text_still_replaced';
+    const want = '## x01_login\n\n![Login page](x01_login.png)\n\n*Login page*\n\n1. Enter your email\n2. Click Masuk\n\n## x02_text_still_replaced';
     return r.status === 0 && fs.existsSync(md) && fs.readFileSync(md, 'utf8').startsWith(want) || r.out;
   }],
   ['docs and demo examples still run (--check)', () => {

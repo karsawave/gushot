@@ -1,4 +1,4 @@
-## The Recent orders page
+## 01_orders
 
 ![The Recent orders page](screenshots/01_orders.png)
 
@@ -6,7 +6,7 @@
 
 1. Click New order
 
-## Filling in a new order
+## 02_order_form
 
 ![Filling in a new order](screenshots/02_order_form.png)
 

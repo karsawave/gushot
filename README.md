@@ -117,7 +117,7 @@ What you will use most:
 | In a shot | Does |
 |---|---|
 | `highlight` | draws a red box around the elements a guide step talks about; `{ "selector": "#save", "label": "2", "note": "Save here" }` adds a numbered badge and a short callout |
-| `caption` | the image caption; `--md` writes it as the heading. A highlight's `"text": "Click Save"` is step text for `--md` only, not drawn |
+| `caption` | the image caption; `--md` writes it as alt text and as an italic line under the image. A highlight's `"text": "Click Save"` is step text for `--md` only, not drawn |
 | `replaceText` | swaps real text for sample text before capturing: `{ "Budi Santoso": "Sample Customer" }` (also at the top, for every shot) |
 | `blur` | blurs extra elements in this shot (`alwaysBlur` does it for every shot) |
 | `element` | captures only one element, such as a modal or a form; add `"padding": 16` to keep some of the page around it |
