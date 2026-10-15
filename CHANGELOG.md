@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0 (2026-10-15)
 
 - New `--md <file>` writes a Markdown skeleton of the guide: per shot a heading with its `name`, the image with its `caption` as alt text and as an italic line under it, and the markers' step text as a numbered list. Rerun after a UI change and the text that belongs to the images comes back with them.
 - New shot key `caption` (alias `keterangan`) and highlight key `text` (alias `teks`): step text that goes into `--md` without being drawn on the image. `note` is used too.
