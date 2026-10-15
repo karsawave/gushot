@@ -5,13 +5,14 @@
 
 **English** · [Bahasa Indonesia](README.id.md)
 
-GuShot (Guide User Shot) takes the screenshots for a web app's user guide. You describe the pages, logins, and clicks in one JSON file, run one command, and get every image at the same size, with sensitive data blurred and the relevant buttons highlighted. When the UI changes, rerun it instead of redoing the screenshots by hand.
+GuShot (Guide User Shot) takes the screenshots for a web app's user guide. You describe the pages, logins, and clicks in one JSON file, run one command, and get every image at the same size, with sensitive data blurred and the relevant buttons highlighted. When the UI changes, rerun it instead of redoing the screenshots by hand. The image captions and step text can live in the same file, so `--md` gives you an updated Markdown skeleton of the guide too.
 
 ![GuShot demo: login, OTP, blur, highlight, modal](demo/gushot-demo.gif)
 
 ## Contents
 
 - [Requirements](#requirements)
+- [Which apps it fits](#which-apps-it-fits)
 - [Quick start](#quick-start)
 - [Writing a config](#writing-a-config)
 - [Running](#running)
@@ -29,6 +30,23 @@ Step-by-step tutorials with runnable examples and flow diagrams are in [docs/](d
 - Only for `video` shots: [ffmpeg](https://ffmpeg.org/download.html) on `PATH`, or set `"ffmpeg"` in the config
 
 Works on Windows, macOS, and Linux.
+
+## Which apps it fits
+
+GuShot drives Chrome or Edge, so it works for **web apps** you can run with sample data: server-rendered apps (Laravel, Django, Rails, PHP), single-page apps (React, Vue, Angular), admin and CRUD screens, AJAX dropdown chains, Select2, flatpickr, long modals, and phone-sized layouts of a responsive site.
+
+| Situation | What to expect |
+|---|---|
+| Login with an OTP written to a log or mail log | works (`otp` step) |
+| SSO or captcha login | use an existing session cookie (`cookie` step) |
+| OTP by SMS or an authenticator app | turn 2FA off on the local server, or use `cookie` |
+| Production server without sample data | possible, but images change with the data, real data may show, and steps that save write to production. Use a local copy |
+| Live charts, clocks, animations | the image changes every run; `hide` that part or fix it with a `js` step |
+| Canvas or WebGL (maps, drawing editors) | captured, but `clickText`, `fill`, and `replaceText` cannot reach inside |
+| Iframes from another domain (payment pages) | captured, but their fields cannot be clicked or filled |
+| Downloads, print dialogs, OS dialogs | not captured |
+| CSS classes that change every build | configs break often; use `clickText`, `fill` by label, or ask for stable `data-*` attributes |
+| Desktop or native mobile apps | not supported |
 
 ## Quick start
 
@@ -99,6 +117,8 @@ What you will use most:
 | In a shot | Does |
 |---|---|
 | `highlight` | draws a red box around the elements a guide step talks about; `{ "selector": "#save", "label": "2", "note": "Save here" }` adds a numbered badge and a short callout |
+| `caption` | the image caption; `--md` writes it as the heading. A highlight's `"text": "Click Save"` is step text for `--md` only, not drawn |
+| `replaceText` | swaps real text for sample text before capturing: `{ "Budi Santoso": "Sample Customer" }` (also at the top, for every shot) |
 | `blur` | blurs extra elements in this shot (`alwaysBlur` does it for every shot) |
 | `element` | captures only one element, such as a modal or a form; add `"padding": 16` to keep some of the page around it |
 | `fullPage` | captures the whole scrolling page |
@@ -129,6 +149,7 @@ Every key and step, including `select`, `press`, `scrollTo`, `hide`, `theme`, an
 node <path-to>/shot.cjs my-guide.json             # every shot
 node <path-to>/shot.cjs my-guide.json 03 login    # only shots whose name contains "03" or "login"
 node <path-to>/shot.cjs my-guide.json --check     # run the steps, save nothing
+node <path-to>/shot.cjs my-guide.json --md guide-skeleton.md   # also write a Markdown skeleton
 ```
 
 - Each shot prints `OK <file>` or `FAIL <name> - <reason>`. A failed shot does not stop the rest.
@@ -136,13 +157,14 @@ node <path-to>/shot.cjs my-guide.json --check     # run the steps, save nothing
 - A misspelled key prints a `WARN unknown key` line instead of being silently ignored.
 - Exit code: `0` all shots OK, `1` at least one failed, `2` the dependency is not installed.
 - `--check` runs every step but saves no images. Use it after a UI change, or in CI, to find broken selectors early.
+- `--md <file>` writes, per shot, its `caption`, the image, and the highlights' step text as a numbered list. The file is overwritten every run: copy from it into your guide. See [tutorial 7](docs/guide-text/guide-text.md).
 - `"scale": 2` in the config gives double-resolution images that stay sharp in a PDF or on a HiDPI screen.
 - `"keepLogin": 60` in the config keeps each session's login for 60 minutes, so later runs skip the login and OTP. It is saved in `.gushot/` next to the config, which is git-ignored automatically.
 - Add `"headless": false` to the config to watch the browser while it works.
 
 ## Using it with an AI agent
 
-GuShot is also an [Agent Skill](https://agentskills.io). Once installed, you ask the agent in plain words ("make screenshots of the login page and the dashboard for the user guide"). It reads your app's code to work out the login flow, writes the config, runs it, and checks the images.
+GuShot is also an [Agent Skill](https://agentskills.io). Once installed, you ask the agent in plain words ("make screenshots of the login page and the dashboard for the user guide"). It reads your app's code to work out the login flow, writes the config, runs it, and checks the images. When it also writes the guide text, it follows [writing.md](skills/guide-screenshots/references/writing.md) and your project's own style file, if you have one.
 
 The agent has to run commands on the same machine as your app, or one that can reach it. Agents that run in a cloud sandbox, such as a chat in the browser, cannot open your `localhost` and have no Chrome.
 
@@ -226,7 +248,7 @@ Run the self-test before sending changes:
 node test/run.cjs
 ```
 
-It runs test configs against a local page and checks the results: English and Indonesian keys (each with one failing shot and one misspelled key on purpose), numbered highlights and notes, `scale`, `padding`, `--check`, the new/changed/unchanged report, `keepLogin`, `video` (the recording part is skipped when ffmpeg is not installed), and a `--check` run of every example in `docs/` and `demo/`. CI runs the same test on Ubuntu, Windows, and macOS for every push and pull request; changes to `main` need it to pass. See [AGENTS.md](AGENTS.md) for the conventions and [CHANGELOG.md](CHANGELOG.md) for releases. Bugs and ideas go in [issues](https://github.com/rombyar/gushot/issues/new/choose).
+It runs test configs against a local page and checks the results: English and Indonesian keys (each with one failing shot and one misspelled key on purpose), numbered highlights and notes, `scale`, `padding`, `--check`, the new/changed/unchanged report, `keepLogin`, `replaceText` and the `--md` skeleton, `video` (the recording part is skipped when ffmpeg is not installed), and a `--check` run of every example in `docs/` and `demo/`. CI runs the same test on Ubuntu, Windows, and macOS for every push and pull request; changes to `main` need it to pass. See [AGENTS.md](AGENTS.md) for the conventions and [CHANGELOG.md](CHANGELOG.md) for releases. Bugs and ideas go in [issues](https://github.com/rombyar/gushot/issues/new/choose).
 
 ## License
 

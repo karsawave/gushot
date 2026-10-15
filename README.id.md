@@ -5,13 +5,14 @@
 
 [English](README.md) · **Bahasa Indonesia**
 
-GuShot (Guide User Shot) membuat screenshot untuk buku panduan aplikasi web. Halaman, login, dan klik ditulis di satu file JSON, lalu satu perintah memotret semuanya dengan ukuran yang sama, data sensitif di-blur, dan tombol yang dibahas diberi sorotan. Kalau tampilan aplikasi berubah, cukup jalankan ulang, tidak perlu memotret manual lagi.
+GuShot (Guide User Shot) membuat screenshot untuk buku panduan aplikasi web. Halaman, login, dan klik ditulis di satu file JSON, lalu satu perintah memotret semuanya dengan ukuran yang sama, data sensitif di-blur, dan tombol yang dibahas diberi sorotan. Kalau tampilan aplikasi berubah, cukup jalankan ulang, tidak perlu memotret manual lagi. Keterangan gambar dan teks langkah juga bisa disimpan di file yang sama, jadi `--md` sekaligus menghasilkan kerangka panduan Markdown yang ikut diperbarui.
 
 ![Demo GuShot: login, OTP, blur, sorotan, modal](demo/gushot-demo.gif)
 
 ## Isi
 
 - [Kebutuhan](#kebutuhan)
+- [Cocok untuk aplikasi apa](#cocok-untuk-aplikasi-apa)
 - [Mulai cepat](#mulai-cepat)
 - [Menulis config](#menulis-config)
 - [Menjalankan](#menjalankan)
@@ -29,6 +30,23 @@ Tutorial langkah demi langkah, lengkap dengan contoh yang bisa dijalankan dan di
 - Khusus shot `video`: [ffmpeg](https://ffmpeg.org/download.html) di `PATH`, atau isi `"ffmpeg"` di config
 
 Jalan di Windows, macOS, dan Linux.
+
+## Cocok untuk aplikasi apa
+
+GuShot menjalankan Chrome atau Edge, jadi cocok untuk **aplikasi web** yang bisa dijalankan dengan data contoh: aplikasi yang dirender server (Laravel, Django, Rails, PHP), aplikasi satu halaman (React, Vue, Angular), layar admin dan CRUD, dropdown berantai AJAX, Select2, flatpickr, modal panjang, dan tampilan HP dari situs responsif.
+
+| Kondisi | Yang terjadi |
+|---|---|
+| Login dengan OTP yang ditulis ke log atau log email | bisa (langkah `otp`) |
+| Login SSO atau captcha | pakai cookie sesi yang sudah ada (langkah `cookie`) |
+| OTP lewat SMS atau aplikasi authenticator | matikan 2FA di server lokal, atau pakai `cookie` |
+| Server produksi tanpa data contoh | bisa, tapi gambar ikut berubah mengikuti data, data asli bisa terpotret, dan langkah yang menyimpan menulis ke produksi. Pakai salinan lokal |
+| Grafik live, jam, animasi | gambar berubah setiap run; sembunyikan dengan `hide` atau tetapkan nilainya lewat langkah `js` |
+| Canvas atau WebGL (peta, editor gambar) | ikut terpotret, tapi `clickText`, `fill`, dan `replaceText` tidak bisa menjangkau isinya |
+| Iframe dari domain lain (halaman pembayaran) | ikut terpotret, tapi kolomnya tidak bisa diklik atau diisi |
+| Unduhan, dialog cetak, dialog bawaan OS | tidak terpotret |
+| Class CSS yang berganti setiap build | config sering rusak; pakai `clickText`, `fill` berdasarkan label, atau minta atribut `data-*` yang tetap |
+| Aplikasi desktop atau mobile native | tidak didukung |
 
 ## Mulai cepat
 
@@ -99,6 +117,8 @@ Yang paling sering dipakai:
 | Di dalam shot | Fungsi |
 |---|---|
 | `highlight` | memberi kotak merah pada elemen yang dibahas di langkah panduan; `{ "selector": "#save", "label": "2", "note": "Simpan di sini" }` menambah nomor langkah dan teks keterangan |
+| `caption` | keterangan gambar; `--md` menuliskannya sebagai judul. `"text": "Klik Simpan"` pada sorotan adalah teks langkah khusus `--md`, tidak digambar |
+| `replaceText` | mengganti teks asli dengan teks contoh sebelum memotret: `{ "Budi Santoso": "Pelanggan Contoh" }` (bisa juga di bagian atas, untuk semua shot) |
 | `blur` | mem-blur elemen tambahan di shot ini (`alwaysBlur` berlaku untuk semua shot) |
 | `element` | memotret satu elemen saja, misalnya modal atau form; tambahkan `"padding": 16` supaya sebagian halaman di sekitarnya ikut terlihat |
 | `fullPage` | memotret seluruh halaman sampai bawah |
@@ -131,6 +151,7 @@ Kunci config juga bisa ditulis dalam bahasa Indonesia (`buka`, `klik`, `sorot`, 
 node <path>/shot.cjs panduan.json             # semua shot
 node <path>/shot.cjs panduan.json 03 login    # hanya shot yang namanya mengandung "03" atau "login"
 node <path>/shot.cjs panduan.json --check     # jalankan langkah, tanpa menyimpan gambar
+node <path>/shot.cjs panduan.json --md kerangka.md   # sekaligus menulis kerangka Markdown
 ```
 
 - Setiap shot mencetak `OK <file>` atau `FAIL <nama> - <alasan>`. Shot yang gagal tidak menghentikan yang lain.
@@ -138,13 +159,14 @@ node <path>/shot.cjs panduan.json --check     # jalankan langkah, tanpa menyimpa
 - Kunci yang salah ketik memunculkan baris `WARN unknown key`, tidak diabaikan diam-diam.
 - Kode keluar: `0` semua OK, `1` ada yang gagal, `2` dependensi belum dipasang.
 - `--check` menjalankan semua langkah tanpa menyimpan gambar. Pakai setelah tampilan berubah, atau di CI, untuk menemukan selector yang rusak lebih awal.
+- `--md <file>` menulis, per shot, `caption`-nya, gambarnya, dan teks langkah dari sorotan sebagai daftar bernomor. File ini ditimpa setiap run: salin isinya ke panduan Anda. Lihat [tutorial 7](docs/guide-text/guide-text.id.md).
 - `"scale": 2` di config menghasilkan gambar resolusi ganda yang tetap tajam di PDF atau layar HiDPI.
 - `"keepLogin": 60` di config menyimpan login tiap sesi selama 60 menit, jadi run berikutnya tidak perlu login dan OTP lagi. Disimpan di `.gushot/` di samping config, yang otomatis diabaikan git.
 - Tambahkan `"headless": false` di config untuk melihat browser saat bekerja.
 
 ## Dipakai lewat agen AI
 
-GuShot juga sebuah [Agent Skill](https://agentskills.io). Setelah dipasang, cukup minta ke agen dengan bahasa biasa ("buatkan screenshot halaman login dan dasbor untuk buku panduan"). Agen akan membaca kode aplikasi Anda untuk memahami alur login, menulis config, menjalankannya, lalu memeriksa gambarnya.
+GuShot juga sebuah [Agent Skill](https://agentskills.io). Setelah dipasang, cukup minta ke agen dengan bahasa biasa ("buatkan screenshot halaman login dan dasbor untuk buku panduan"). Agen akan membaca kode aplikasi Anda untuk memahami alur login, menulis config, menjalankannya, lalu memeriksa gambarnya. Kalau agen juga menulis teks panduannya, agen mengikuti [writing.md](skills/guide-screenshots/references/writing.md) dan file gaya milik proyek Anda, kalau ada.
 
 Agennya harus bisa menjalankan perintah di komputer yang sama dengan aplikasi Anda, atau yang bisa mengaksesnya. Agen yang berjalan di sandbox cloud, misalnya chat di browser, tidak bisa membuka `localhost` Anda dan tidak punya Chrome.
 
@@ -224,7 +246,7 @@ Jalankan uji mandiri sebelum mengirim perubahan:
 node test/run.cjs
 ```
 
-Uji ini menjalankan config uji terhadap halaman lokal lalu memeriksa hasilnya: kunci Inggris dan Indonesia (masing-masing sengaja berisi satu shot yang gagal dan satu kunci yang salah ketik), sorotan bernomor dan keterangan, `scale`, `padding`, `--check`, laporan new/changed/unchanged, `keepLogin`, `video` (bagian rekaman dilewati kalau ffmpeg tidak terpasang), serta `--check` untuk semua contoh di `docs/` dan `demo/`. CI menjalankan uji yang sama di Ubuntu, Windows, dan macOS setiap push dan pull request; perubahan ke `main` harus lulus uji ini. Aturan pengembangan ada di [AGENTS.md](AGENTS.md), riwayat rilis di [CHANGELOG.md](CHANGELOG.md). Laporan bug dan ide fitur lewat [issues](https://github.com/rombyar/gushot/issues/new/choose).
+Uji ini menjalankan config uji terhadap halaman lokal lalu memeriksa hasilnya: kunci Inggris dan Indonesia (masing-masing sengaja berisi satu shot yang gagal dan satu kunci yang salah ketik), sorotan bernomor dan keterangan, `scale`, `padding`, `--check`, laporan new/changed/unchanged, `keepLogin`, `replaceText` dan kerangka `--md`, `video` (bagian rekaman dilewati kalau ffmpeg tidak terpasang), serta `--check` untuk semua contoh di `docs/` dan `demo/`. CI menjalankan uji yang sama di Ubuntu, Windows, dan macOS setiap push dan pull request; perubahan ke `main` harus lulus uji ini. Aturan pengembangan ada di [AGENTS.md](AGENTS.md), riwayat rilis di [CHANGELOG.md](CHANGELOG.md). Laporan bug dan ide fitur lewat [issues](https://github.com/rombyar/gushot/issues/new/choose).
 
 ## Lisensi
 

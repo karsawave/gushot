@@ -8,7 +8,7 @@ GuShot membaca satu config JSON lalu menjalankan Chrome atau Edge yang sudah ter
 
 ```mermaid
 flowchart TD
-    A["node shot.cjs config.json [filter] [--check]"] --> B["Baca config<br/>isi nilai {{ENV}}<br/>peringatkan kunci tak dikenal"]
+    A["node shot.cjs config.json [filter] [--check] [--md file]"] --> B["Baca config<br/>isi nilai {{ENV}}<br/>peringatkan kunci tak dikenal"]
     B --> C["Pilih shot<br/>(semua, atau yang namanya cocok dengan filter)"]
     C --> D["Cari Chrome / Edge<br/>config, CHROME_PATH, folder instalasi, PATH"]
     D --> E{"Shot berikutnya"}
@@ -20,7 +20,7 @@ flowchart TD
     R --> M3["Cetak OK file (video)"]
     M3 --> E
     V -- tidak --> H["Buka url, jalankan langkah shot"]
-    H --> I["Pasang blur, hide, css<br/>gambar kotak, nomor, keterangan"]
+    H --> I["Pasang replaceText, blur, hide, css<br/>gambar kotak, nomor, keterangan"]
     I --> J{"--check?"}
     J -- tidak --> K["Simpan PNG<br/>halaman, seluruh halaman, atau elemen + padding"]
     J -- ya --> L["Tidak menyimpan apa pun"]
@@ -71,7 +71,9 @@ Shot dengan `"freshSession": true` membuka ulang sesinya di konteks browser baru
 
 **Path dihitung dari file config.** `out`, `otp.file`, `cwd` milik langkah `run`, halaman lokal seperti `"./app.html"`, `chrome`, `ffmpeg`, dan folder `.gushot/` semuanya dihitung dari folder tempat file config berada, bukan dari tempat Anda menjalankan perintah.
 
-**Penanda bersifat sementara.** Blur, elemen yang disembunyikan, kotak sorot, nomor, dan keterangan dipasang tepat sebelum memotret lalu dihapus tepat setelahnya, jadi tidak terbawa ke shot berikutnya.
+**Penanda bersifat sementara.** Blur, elemen yang disembunyikan, kotak sorot, nomor, dan keterangan dipasang tepat sebelum memotret lalu dihapus tepat setelahnya, jadi tidak terbawa ke shot berikutnya. Pengecualiannya `replaceText`: teks halaman itu sendiri yang diganti, jadi teks contoh tetap ada sampai ada shot yang membuka `url` lagi.
+
+**Kerangka Markdown ditulis paling akhir.** Dengan `--md`, setelah browser ditutup, GuShot menulis satu bagian per shot yang berhasil (`caption`, path gambar relatif terhadap file Markdown, `text` atau `note` sorotan sebagai langkah bernomor). Bagian ini tidak butuh browser, jadi tetap jalan dengan `--check`. Lihat [tutorial 7](../guide-text/guide-text.id.md).
 
 **Video menjaga blur di setiap frame.** Untuk shot `video`, blur, hide, dan css tambahan dipasang sebelum perekaman dimulai dan dipasang lagi begitu setiap halaman baru dimuat, jadi data pribadi tidak sempat terlihat saat pindah halaman. Lihat [tutorial 6](../video/record-a-flow.id.md).
 

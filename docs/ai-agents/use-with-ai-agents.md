@@ -20,7 +20,7 @@ flowchart TD
     I --> J{FAIL?}
     J -- yes --> K[Fix selector or step, rerun that shot]
     K --> I
-    J -- no --> L[Look at one or two images]
+    J -- no --> L[Look at every new or changed image]
     L --> M[Insert images into the guide, report back]
 ```
 
@@ -69,6 +69,7 @@ Open your app's project in the agent and ask:
 | One step explained with numbers | "Screenshot the new order modal with the customer, item, quantity, and save button numbered 1 to 4." |
 | A phone version | "Add phone-size versions of the dashboard and order list." |
 | An update after a redesign | "The header changed. Check which guide screenshots are broken or changed and update them." |
+| The guide text too | "Write the order chapter of docs/guide.md with screenshots. Follow docs/guide-style.md." |
 | Indonesian | "Buatkan screenshot halaman login dan dasbor untuk buku panduan, nama file pakai bahasa Indonesia." |
 
 In Claude Code you can also start with the command: `/guide-screenshots capture the login page and the dashboard`.
@@ -78,9 +79,10 @@ In Claude Code you can also start with the command: `/guide-screenshots capture 
 - The agent reports how many shots succeeded and which files it wrote.
 - It tells you if it changed environment files such as `.env` (for example to send mail to a log), and restores them.
 - Open a few images yourself: logged in, styled, personal data blurred.
+- If it wrote guide text: step numbers match the markers, and quoted button names match the screen. It follows [writing.md](../../skills/guide-screenshots/references/writing.md) and your style file if the project has one.
 
 ## Where it cannot work
 
-The agent has to run commands on the machine where your app runs, or one that can reach it. Chat assistants that run in a cloud sandbox cannot open your `localhost` and have no Chrome.
+The agent has to run commands on the machine where your app runs, or one that can reach it. Chat assistants that run in a cloud sandbox cannot open your `localhost` and have no Chrome. Which kinds of app and login GuShot can handle: [Which apps it fits](../../README.md#which-apps-it-fits).
 
 Back to the [docs index](../README.md).

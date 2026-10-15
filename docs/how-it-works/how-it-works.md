@@ -8,7 +8,7 @@ GuShot reads one JSON config and drives your installed Chrome or Edge through it
 
 ```mermaid
 flowchart TD
-    A["node shot.cjs config.json [filter] [--check]"] --> B["Read config<br/>replace {{ENV}} values<br/>warn about unknown keys"]
+    A["node shot.cjs config.json [filter] [--check] [--md file]"] --> B["Read config<br/>replace {{ENV}} values<br/>warn about unknown keys"]
     B --> C["Pick shots<br/>(all, or names matching the filter)"]
     C --> D["Find Chrome / Edge<br/>config, CHROME_PATH, install folders, PATH"]
     D --> E{"Next shot"}
@@ -20,7 +20,7 @@ flowchart TD
     R --> M3["Print OK file (video)"]
     M3 --> E
     V -- no --> H["Open url, run the shot's steps"]
-    H --> I["Apply blur, hide, css<br/>draw boxes, numbers, notes"]
+    H --> I["Apply replaceText, blur, hide, css<br/>draw boxes, numbers, notes"]
     I --> J{"--check?"}
     J -- no --> K["Save PNG<br/>page, full page, or element + padding"]
     J -- yes --> L["Save nothing"]
@@ -71,7 +71,9 @@ A shot with `"freshSession": true` starts its session again in a new browser con
 
 **Paths are relative to the config file.** `out`, `otp.file`, a `run` step's `cwd`, a local page like `"./app.html"`, `chrome`, `ffmpeg`, and the `.gushot/` folder all resolve from the folder that holds the config, not from where you run the command.
 
-**Annotations are temporary.** Blur, hidden elements, highlight boxes, numbers, and notes are added right before the capture and removed right after, so they never leak into the next shot.
+**Annotations are temporary.** Blur, hidden elements, highlight boxes, numbers, and notes are added right before the capture and removed right after, so they never leak into the next shot. `replaceText` is the exception: it changes the page text itself, so the sample text stays until a shot opens a `url` again.
+
+**The Markdown skeleton comes last.** With `--md`, after the browser closes, GuShot writes one section per successful shot (`caption`, image path relative to the Markdown file, highlight `text` or `note` as numbered steps). It needs no browser, so it works with `--check` too. See [tutorial 7](../guide-text/guide-text.md).
 
 **Videos keep blur on every frame.** For a `video` shot, blur, hide, and extra css are added before recording starts and again as soon as each new page loads, so private data does not flash by between pages. See [tutorial 6](../video/record-a-flow.md).
 

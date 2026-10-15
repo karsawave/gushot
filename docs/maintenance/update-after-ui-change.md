@@ -71,6 +71,10 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.json button hide  # 01 and 02
 ```
 
+## The guide text
+
+If the shots carry a `caption` and step `text` ([tutorial 7](../guide-text/guide-text.md)), add `--md guide-skeleton.md` to the run and compare the skeleton with git: the sections that changed are the text to update. A `waitText` step for each label the guide quotes makes `--check` fail when the app renames it.
+
 ## Catch breakage in CI
 
 Run `--check` on every push, so a renamed button fails the build instead of silently breaking the guide later. A GitHub Actions job, assuming your app can start in CI with sample data:

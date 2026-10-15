@@ -25,6 +25,14 @@ Name the kind before writing; each has its own pattern.
 - A marker's number is the step number in the text (see SKILL.md, step 4).
 - Put each step's short text in that marker's `text` (written only by `--md`) or `note` (also drawn as a callout; fine for one or two markers, crowded on a form), and the image caption in `caption`. The caption then lives only in the config; `--md` writes it next to the image, so do not type it a second time by hand.
 
+## Diagrams
+
+- Add a flow diagram (for example Mermaid) only where text and screenshots cannot show it well: a procedure that branches (a Yes/No decision, a loop back to fix errors), the order in which records must be created, or how records refer to each other. A straight sequence of steps stays a numbered list.
+- Follow the project's style file: if it asks for diagrams, write them; if it forbids them, do not.
+- Check that the project's PDF or site builder renders the diagram. If it does not (raw code would show in the PDF), use a numbered list or a table instead.
+- Number and caption a diagram like an image ("Figure 6.1 ...") and mention it in the text before it, so the reader knows why it is there.
+- Keep it small: one diagram per idea, labels taken from the screen (same button and menu names as the text).
+
 ## Keep labels honest
 
 Every button, menu, or field name the text quotes must match the screen. For each one, add a `waitText` step to the shot that shows it. When the label changes in the app, `--check` fails on that shot and tells you which text to update.

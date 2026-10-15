@@ -20,7 +20,7 @@ flowchart TD
     I --> J{FAIL?}
     J -- ya --> K[Perbaiki selector atau langkah, jalankan ulang shot itu]
     K --> I
-    J -- tidak --> L[Lihat satu atau dua gambar]
+    J -- tidak --> L[Lihat semua gambar baru atau berubah]
     L --> M[Masukkan gambar ke panduan, laporkan hasilnya]
 ```
 
@@ -69,6 +69,7 @@ Buka proyek aplikasi Anda di agen, lalu minta:
 | Satu langkah dijelaskan dengan nomor | "Screenshot modal pesanan baru dengan kolom pelanggan, menu, jumlah, dan tombol simpan diberi nomor 1 sampai 4." |
 | Versi HP | "Tambahkan versi ukuran HP untuk dasbor dan daftar pesanan." |
 | Pembaruan setelah desain berubah | "Header-nya berubah. Cek screenshot panduan mana yang rusak atau berubah, lalu perbarui." |
+| Sekalian teks panduannya | "Tulis bab pesanan di docs/panduan.md beserta screenshot-nya. Ikuti docs/gaya-panduan.md." |
 | Nama file bahasa Indonesia | "Buatkan screenshot halaman login dan dasbor untuk buku panduan, nama file pakai bahasa Indonesia." |
 
 Di Claude Code Anda juga bisa memulai dengan perintah: `/guide-screenshots buatkan screenshot halaman login dan dasbor`.
@@ -77,10 +78,11 @@ Di Claude Code Anda juga bisa memulai dengan perintah: `/guide-screenshots buatk
 
 - Agen melaporkan berapa shot yang berhasil dan file apa saja yang ditulis.
 - Agen memberi tahu kalau mengubah file environment seperti `.env` (misalnya supaya email masuk ke log), lalu mengembalikannya.
+- Kalau agen juga menulis teks panduan: nomor langkah cocok dengan penanda, dan nama tombol yang dikutip sama dengan di layar. Agen mengikuti [writing.md](../../skills/guide-screenshots/references/writing.md) dan file gaya proyek Anda, kalau ada.
 - Buka beberapa gambar sendiri: sudah login, tampilan rapi, data pribadi ter-blur.
 
 ## Kapan tidak bisa dipakai
 
-Agen harus bisa menjalankan perintah di komputer tempat aplikasi berjalan, atau komputer yang bisa mengaksesnya. Asisten chat yang berjalan di sandbox cloud tidak bisa membuka `localhost` Anda dan tidak punya Chrome.
+Agen harus bisa menjalankan perintah di komputer tempat aplikasi berjalan, atau komputer yang bisa mengaksesnya. Asisten chat yang berjalan di sandbox cloud tidak bisa membuka `localhost` Anda dan tidak punya Chrome. Jenis aplikasi dan login yang bisa ditangani GuShot: [Cocok untuk aplikasi apa](../../README.id.md#cocok-untuk-aplikasi-apa).
 
 Kembali ke [daftar isi dokumentasi](../README.id.md).
