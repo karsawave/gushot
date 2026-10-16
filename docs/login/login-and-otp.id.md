@@ -86,7 +86,7 @@ Alamat email, nama pelanggan, nomor HP, dan nama pengguna di-blur oleh `alwaysBl
 2. **Cari ke mana kode dikirim saat development.** Laravel dengan `MAIL_MAILER=log` menulis email ke `storage/logs/laravel.log`; banyak aplikasi mencetaknya ke log konsol. Arahkan `otp.file` ke sana dan tulis `pattern` yang cocok dengan barisnya, misalnya `"Your code is (\\d{6})"`.
 3. **Samakan URL dasar aplikasi dengan `base`.** Kalau aplikasi mengira dirinya berada di host lain, CSS dan cookie-nya rusak.
 4. **Waspadai batas percobaan login.** Tambahkan langkah `run` yang mengosongkan pembatasnya (misalnya `php artisan cache:clear`) di awal sesi.
-5. **Login tidak bisa diotomatisasi (SSO, captcha)?** Login sekali di browser Anda sendiri, salin cookie sesinya (DevTools > Application > Cookies), lalu mulai sesi dengan cookie itu, bukan dengan langkah login:
+5. **Login tidak bisa diotomatisasi (SSO, captcha, OTP lewat SMS)?** Cara termudah: isi `keepLogin` lalu jalankan `node shot.cjs config.json --login admin`. Jendela browser terbuka di halaman `open` sesi itu; login secara manual, dan begitu selector `wait` terakhir sesi muncul, GuShot menyimpan login lalu menutup browser. Run dalam `keepLogin` menit berikutnya tidak perlu login. Tanpa `keepLogin`, login sekali di browser Anda sendiri, salin cookie sesinya (DevTools > Application > Cookies), lalu mulai sesi dengan cookie itu, bukan dengan langkah login:
 
    ```json
    "admin": [

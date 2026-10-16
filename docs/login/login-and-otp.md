@@ -86,7 +86,7 @@ The email address, customer names, phone numbers, and user name are blurred by `
 2. **Find where the code goes in development.** Laravel with `MAIL_MAILER=log` writes mail to `storage/logs/laravel.log`; many apps print it to the console log. Point `otp.file` there and write a `pattern` that matches the line, for example `"Your code is (\\d{6})"`.
 3. **Make the app's base URL match `base`.** If the app thinks it lives at another host, its CSS and cookies break.
 4. **Watch out for login rate limits.** Add a `run` step that clears the limiter (for example `php artisan cache:clear`) at the start of the session.
-5. **Login cannot be automated (SSO, captcha)?** Log in once in your own browser, copy the session cookie (DevTools > Application > Cookies), and start the session with it instead of the login steps:
+5. **Login cannot be automated (SSO, captcha, OTP by SMS)?** Easiest: set `keepLogin` and run `node shot.cjs config.json --login admin`. A browser window opens on the session's `open` page; log in by hand, and once the session's last `wait` selector shows, GuShot saves the login and closes. Runs in the next `keepLogin` minutes skip the login. Without `keepLogin`, log in once in your own browser, copy the session cookie (DevTools > Application > Cookies), and start the session with it instead of the login steps:
 
    ```json
    "admin": [

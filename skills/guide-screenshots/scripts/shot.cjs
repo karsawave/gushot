@@ -2,11 +2,12 @@
 /**
  * GuShot (Guide User Shot): capture web app user-guide screenshots from a single JSON config.
  *
- *   node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>]
+ *   node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>] [--login <session>]
  *   filter  = only shots whose name contains that text
  *   --check = run every step but save no images (catch broken selectors)
  *   --md    = also write a Markdown guide skeleton (caption, image, numbered notes per shot)
  *   --guide = check a Markdown guide against the config (images without a shot, captions that differ)
+ *   --login = log in by hand once in a visible browser and save it for keepLogin (SSO, captcha)
  *
  * Config format: see ../assets/config.example.json and ../references/REFERENCE.md.
  * Config keys are English; the Indonesian keys from v1 are accepted as aliases.
@@ -32,7 +33,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- messages (en primary, id secondary) ----------
 const MSG = {
   en: {
-    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>]',
+    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>] [--login <session>]',
     envMissing: (k) => `Environment variable ${k} is not set`,
     noChrome: 'Chrome/Edge not found, set "chrome" in the config or the CHROME_PATH env',
     textNotFound: (t) => `text "${t}" not found`,
@@ -56,6 +57,9 @@ const MSG = {
     before: (f) => `, before: ${f}`,
     guideNoVersion: '"guide" needs a "version", e.g. { "version": "1.0" }',
     guideNoShot: (w, src) => `${w}: ${src} is used by the guide but no shot makes it`,
+    loginNeeds: '--login needs "keepLogin" (minutes) in the config, and the session needs an "open" step and a "wait" selector that only shows when logged in',
+    loginWaiting: (n, sel) => `Log in as "${n}" in the browser window. Waiting up to 5 minutes for ${sel} ...`,
+    loginSaved: (n, f, m) => `Login for "${n}" saved to ${f}; runs in the next ${m} minutes skip the login`,
     noDevice: (n, l) => `unknown device "${n}"${l.length ? `, did you mean: ${l.join(', ')}` : ''} (names as in puppeteer KnownDevices)`,
     guideAlt: (w, n, a, c) => `${w}: ${n} alt text "${a}" differs from its caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: ${n} caption line "${a}" differs from its caption "${c}"`,
@@ -69,7 +73,7 @@ const MSG = {
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
   },
   id: {
-    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>] [--guide <file>]',
+    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>] [--guide <file>] [--login <session>]',
     envMissing: (k) => `Environment ${k} belum diisi`,
     noChrome: 'Chrome/Edge tidak ditemukan, isi "chrome" di konfigurasi atau env CHROME_PATH',
     textNotFound: (t) => `teks "${t}" tidak ditemukan`,
@@ -93,6 +97,9 @@ const MSG = {
     before: (f) => `, sebelumnya: ${f}`,
     guideNoVersion: '"guide" butuh "version", contoh: { "version": "1.0" }',
     guideNoShot: (w, src) => `${w}: ${src} dipakai panduan tapi tidak dibuat shot mana pun`,
+    loginNeeds: '--login butuh "keepLogin" (menit) di config, dan sesinya butuh langkah "open" serta selector "wait" yang hanya muncul setelah login',
+    loginWaiting: (n, sel) => `Silakan login sebagai "${n}" di jendela browser. Menunggu ${sel} paling lama 5 menit ...`,
+    loginSaved: (n, f, m) => `Login "${n}" disimpan di ${f}; run dalam ${m} menit ke depan tidak perlu login`,
     noDevice: (n, l) => `perangkat "${n}" tidak dikenal${l.length ? `, mungkin: ${l.join(', ')}` : ''} (nama sesuai KnownDevices puppeteer)`,
     guideAlt: (w, n, a, c) => `${w}: teks alt ${n} "${a}" beda dengan caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: baris keterangan ${n} "${a}" beda dengan caption "${c}"`,
@@ -156,6 +163,9 @@ const args = process.argv.slice(2);
 const CHECK = args.includes('--check');
 const mdAt = args.indexOf('--md');
 const MD = mdAt < 0 ? null : path.resolve(args.splice(mdAt, 2)[1] || 'guide.md');
+const loginAt = args.indexOf('--login');
+const LOGIN = loginAt < 0 ? null : args.splice(loginAt, 2)[1];
+if (loginAt >= 0 && !LOGIN) { console.error(T.usage); process.exit(1); }
 const guideAt = args.indexOf('--guide');
 const GUIDE = guideAt < 0 ? null : args.splice(guideAt, 2)[1];
 if (guideAt >= 0 && !GUIDE) { console.error(T.usage); process.exit(1); }
@@ -418,6 +428,22 @@ async function restoreLogin(page, name, steps) {
     fs.rmSync(file, { force: true });
     return false;
   }
+}
+
+// --login <session>: for logins that cannot be scripted (SSO, captcha, OTP by SMS). Opens the session's
+// first page in a visible browser, waits up to 5 minutes for its last `wait` selector (= you are logged
+// in), and saves the login like keepLogin does. Later runs reuse it until keepLogin minutes pass.
+async function recordLogin(browser, name) {
+  const steps = cfg.sessions?.[name];
+  if (!steps) throw new Error(T.noSession(name));
+  const verify = verifySelector(steps), start = steps.find((x) => x.open)?.open;
+  if (!cfg.keepLogin || !verify || !start) throw new Error(T.loginNeeds);
+  const page = await newPage(browser);
+  await page.goto(absUrl(start), { waitUntil: 'networkidle2' });
+  console.log(T.loginWaiting(name, verify));
+  await page.waitForSelector(verify, { visible: true, timeout: 5 * 60000 });
+  await saveLogin(page, name, steps);
+  console.log(T.loginSaved(name, path.relative(process.cwd(), loginFile(name)), cfg.keepLogin));
 }
 
 async function saveLogin(page, name, steps) {
@@ -683,11 +709,11 @@ async function capture(page, s) {
 (async () => {
   if (!CHECK) fs.mkdirSync(OUT, { recursive: true });
   const shots = cfg.shots.filter((s) => !filters.length || filters.some((t) => s.name.includes(t)));
-  if (!shots.length) { console.log(T.noShots); return; }
+  if (!shots.length && !LOGIN) { console.log(T.noShots); return; }
 
   const launch = () => puppeteer.launch({
     executablePath: findChrome(),
-    headless: cfg.headless ?? true,
+    headless: cfg.headless ?? !LOGIN, // --login needs a window to log in by hand
     defaultViewport: VIEWPORT,
     acceptInsecureCerts: true,
   });
@@ -699,6 +725,7 @@ async function capture(page, s) {
     return launch();
   });
   UA = await browser.userAgent(); // restored after a shot with "device"
+  if (LOGIN) { await recordLogin(browser, LOGIN); await browser.close(); return; }
   const pages = {}; // one logged-in tab per session, reused across shots
   const failed = [];
   const counts = { new: 0, changed: 0 }; // tells the guide writer which images to re-insert

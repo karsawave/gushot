@@ -1,0 +1,9 @@
+{
+  "out": "output",
+  "keepLogin": 60,
+  "headless": true,
+  "sessions": {
+    "manual": [{ "open": "./page.html" }, { "wait": "#login" }]
+  },
+  "shots": [{ "name": "l01_after_manual_login", "session": "manual" }]
+}

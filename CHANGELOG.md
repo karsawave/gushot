@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New `--login <session>` for logins that cannot be scripted (SSO, captcha, OTP by SMS): opens a visible browser on the session's first page, waits until you have logged in by hand, and saves the login for `keepLogin`. Later runs reuse it.
 - New root key `captionNumber` (alias `nomorGambar`), with shot keys `chapter` (`bab`) and `skipNumbers` (`lewatiNomor`): numbers the captions (`"Gambar {chapter}.{n}"`) in config order for `--md` and `--guide`, so adding a shot in the middle no longer means renumbering by hand. `skipNumbers` leaves numbers free for diagrams.
 - New shot and root key `device` (alias `perangkat`): emulates a phone or tablet from puppeteer's list (`"iPhone 13"`, `"Pixel 7"`), with its size, user agent, and touch, so sites that change layout or menus on mobile are captured as users see them. An unknown name suggests close ones.
 - New `--guide <file.md>`: checks a Markdown guide against the config. Images the guide uses that no shot makes, and captions in the guide that differ from `caption`, print a `GUIDE` line and make the exit code 1, so the check can run in CI. Shots the guide does not use are listed as info.

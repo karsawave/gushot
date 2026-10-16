@@ -221,6 +221,14 @@ const cases = [
     return r.status === 1 && lines === '*Gambar 6.1 Contoh halaman daftar*|*Gambar 6.2 Formulir Add Status*|*Gambar 6.4 Formulir Supplier*|*Gambar 7.1 Halaman detail*'
       && r.out.includes('n03_supplier alt text "Gambar 6.3 Formulir Supplier" differs from its caption "Gambar 6.4 Formulir Supplier"') || r.out + md;
   }],
+  ['--login saves a hand-made login that the next run reuses', () => {
+    const saved = path.join(__dirname, '.gushot', 'manual.json');
+    fs.rmSync(saved, { force: true });
+    const a = shot('config.login.json', '--login', 'manual');
+    const b = shot('config.login.json', '--check');
+    return a.status === 0 && a.out.includes('Login for "manual" saved') && fs.existsSync(saved)
+      && b.status === 0 && b.out.includes('session "manual": saved login reused') || a.out + b.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

@@ -38,8 +38,8 @@ GuShot drives Chrome or Edge, so it works for **web apps** you can run with samp
 | Situation | What to expect |
 |---|---|
 | Login with an OTP written to a log or mail log | works (`otp` step) |
-| SSO or captcha login | use an existing session cookie (`cookie` step) |
-| OTP by SMS or an authenticator app | turn 2FA off on the local server, or use `cookie` |
+| SSO or captcha login | log in by hand once with `--login <session>` (needs `keepLogin`), or use an existing session cookie (`cookie` step) |
+| OTP by SMS or an authenticator app | log in by hand with `--login`, turn 2FA off on the local server, or use `cookie` |
 | Production server without sample data | possible, but images change with the data, real data may show, and steps that save write to production. Use a local copy |
 | Dates, clocks, "2 hours ago" | `"freezeTime": "2026-01-15T09:00:00"` fixes dates made in the browser; dates printed by the server need sample data with fixed dates |
 | Live charts, animations | the image changes every run; `hide` that part or fix it with a `js` step |
