@@ -1,6 +1,6 @@
 {
   "name": "gushot",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Screenshot user guides automatically from one JSON config",
   "author": { "name": "Roma" },
   "license": "MIT",

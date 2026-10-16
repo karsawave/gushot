@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 (2026-10-16)
 
 - New root key `guide` (alias `panduan`): `{ "version", "date", "appVersion" }`. `--md` starts the skeleton with them as YAML front matter, for the guide's cover, plus a suggested revision row. GuShot reminds you to raise `version` when images changed since the last run with the same version.
 
