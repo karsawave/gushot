@@ -1,0 +1,7 @@
+{
+  "out": "output",
+  "guide": { "version": "{{GUIDE_VERSION}}", "appVersion": "Test 1" },
+  "shots": [
+    { "name": "g01_login", "url": "./page.html", "element": "#login", "replaceText": { "Sign in": "{{PREV_TEXT}}" } }
+  ]
+}

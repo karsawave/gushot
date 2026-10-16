@@ -53,6 +53,9 @@ const MSG = {
     changes: (c, n) => `Changed: ${c}, new: ${n}.`,
     mdWritten: (f) => `Guide skeleton: ${f}`,
     before: (f) => `, before: ${f}`,
+    guideNoVersion: '"guide" needs a "version", e.g. { "version": "1.0" }',
+    guideNotRaised: (v) => `Images changed since version ${v}; raise guide.version in the config`,
+    revisionRow: (v, d, what) => `Revision row: | ${v} | ${d} | ${what} | (reason) |`,
     orphans: (out, l) => `Images in ${out} that no shot makes (renamed or removed?): ${l.join(', ')}`,
     badTime: (v) => `freezeTime "${v}" is not a date, use e.g. "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> GuShot run ${d}: ${[c.length && `changed: ${c.join(', ')}`, n.length && `new: ${n.join(', ')}`].filter(Boolean).join('; ') || 'no image changes'}`,
@@ -82,6 +85,9 @@ const MSG = {
     changes: (c, n) => `Berubah: ${c}, baru: ${n}.`,
     mdWritten: (f) => `Kerangka panduan: ${f}`,
     before: (f) => `, sebelumnya: ${f}`,
+    guideNoVersion: '"guide" butuh "version", contoh: { "version": "1.0" }',
+    guideNotRaised: (v) => `Gambar berubah sejak versi ${v}; naikkan guide.version di config`,
+    revisionRow: (v, d, what) => `Baris revisi: | ${v} | ${d} | ${what} | (alasan) |`,
     orphans: (out, l) => `Gambar di ${out} yang tidak dibuat shot mana pun (ganti nama atau dihapus?): ${l.join(', ')}`,
     badTime: (v) => `freezeTime "${v}" bukan tanggal, contoh: "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> Run GuShot ${d}: ${[c.length && `berubah: ${c.join(', ')}`, n.length && `baru: ${n.join(', ')}`].filter(Boolean).join('; ') || 'tidak ada gambar yang berubah'}`,
@@ -95,7 +101,7 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
@@ -103,6 +109,7 @@ const ALIAS = {
     gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
   highlight: { catatan: 'note', teks: 'text' },
+  guide: { versi: 'version', tanggal: 'date', versiAplikasi: 'appVersion' },
 };
 const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
   ? Object.fromEntries(Object.entries(o).map(([k, v]) => [map[k] || k, v])) : o);
@@ -110,11 +117,12 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init sessions shots',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note text',
+  guide: 'version date appVersion',
 };
 const warned = new Set();
 const check = (o, kind) => {
@@ -147,6 +155,10 @@ const raw = fs.readFileSync(configFile, 'utf8').replace(/\{\{(\w+)\}\}/g, (_, k)
 const cfg = alias(JSON.parse(raw), ALIAS.root);
 if (!ENV_LANG && cfg.lang) T = MSG[cfg.lang] || MSG.en;
 check(cfg, 'root');
+if (cfg.guide) {
+  cfg.guide = check(alias(cfg.guide, ALIAS.guide), 'guide');
+  if (!cfg.guide.version) { console.error(T.guideNoVersion); process.exit(1); }
+}
 cfg.shots = (cfg.shots || []).map((s) => {
   const r = check(alias(s, ALIAS.shot), 'shot');
   r.steps = (r.steps || []).map(step);
@@ -383,9 +395,7 @@ async function restoreLogin(page, name, steps) {
 
 async function saveLogin(page, name, steps) {
   if (!cfg.keepLogin || !verifySelector(steps)) return;
-  const dir = path.dirname(loginFile(name));
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, '.gitignore'), '*\n');
+  gushotDir();
   const storage = await page.evaluate(() => ({ ...localStorage })).catch(() => ({}));
   const data = { savedAt: Date.now(), url: page.url(), cookies: await page.browserContext().cookies(), storage };
   fs.writeFileSync(loginFile(name), JSON.stringify(data), { mode: 0o600 });
@@ -411,12 +421,17 @@ async function newSession(browser, name) {
 }
 
 const outFile = (s) => path.join(OUT, s.name.endsWith('.png') ? s.name : `${s.name}.png`);
-// The image a `changed` shot replaced goes to <config folder>/.gushot/prev/, git-ignored like saved logins.
-function keepPrevious(s, old) {
+// <config folder>/.gushot/ holds saved logins, previous images, and the last guide version.
+// It ignores itself in git, since logins are live session cookies.
+function gushotDir(sub = '') {
   const dir = path.join(configDir, '.gushot');
-  fs.mkdirSync(path.join(dir, 'prev'), { recursive: true });
+  fs.mkdirSync(path.join(dir, sub), { recursive: true });
   fs.writeFileSync(path.join(dir, '.gitignore'), '*\n');
-  const f = path.join(dir, 'prev', path.basename(outFile(s)));
+  return path.join(dir, sub);
+}
+// The image a `changed` shot replaced goes to .gushot/prev/, so the change can be compared.
+function keepPrevious(s, old) {
+  const f = path.join(gushotDir('prev'), path.basename(outFile(s)));
   fs.writeFileSync(f, old);
   return f;
 }
@@ -646,6 +661,14 @@ async function capture(page, s) {
   const made = new Set(cfg.shots.map((s) => path.basename(outFile(s))));
   const orphans = fs.existsSync(OUT) ? fs.readdirSync(OUT).filter((f) => f.endsWith('.png') && !made.has(f)) : [];
   if (orphans.length) console.log(T.orphans(path.relative(process.cwd(), OUT) || '.', orphans));
+  // guide.version: remind to raise it when images changed since the last run with the same version.
+  // The config is never edited; the last version is kept in .gushot/guide.json.
+  if (cfg.guide && !CHECK) {
+    const state = path.join(gushotDir(), 'guide.json');
+    const last = fs.existsSync(state) ? JSON.parse(fs.readFileSync(state, 'utf8')).version : null;
+    if (last === cfg.guide.version && touched.changed.length + touched.new.length) console.log(T.guideNotRaised(last));
+    fs.writeFileSync(state, JSON.stringify({ version: cfg.guide.version }));
+  }
   if (MD) {
     // One section per shot that worked, headed by its name (the guide's own headings are section titles): image, caption, then the highlight texts (or notes) as numbered steps.
     const md = shots.filter((s) => !failed.includes(s.name)).map((s) => {
@@ -658,7 +681,13 @@ async function capture(page, s) {
     fs.mkdirSync(path.dirname(MD), { recursive: true });
     const day = new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
     const run = CHECK ? T.mdRunCheck(day) : T.mdRun(day, touched.changed, touched.new);
-    fs.writeFileSync(MD, `${[run, ...md].join('\n\n')}\n`);
+    // guide: YAML front matter for the project's builder (cover page), plus a revision row to copy.
+    const g = cfg.guide;
+    const head = g ? [['---', `version: ${JSON.stringify(String(g.version))}`, `date: ${g.date || day}`,
+      ...(g.appVersion ? [`appVersion: ${JSON.stringify(String(g.appVersion))}`] : []), '---'].join('\n')] : [];
+    const what = [touched.changed.length && `changed: ${touched.changed.join(', ')}`, touched.new.length && `new: ${touched.new.join(', ')}`].filter(Boolean).join('; ');
+    const row = g && !CHECK && what ? [`<!-- ${T.revisionRow(g.version, g.date || day, what)} -->`] : [];
+    fs.writeFileSync(MD, `${[...head, run, ...row, ...md].join('\n\n')}\n`);
     console.log(T.mdWritten(path.relative(process.cwd(), MD)));
   }
   console.log(T.done(shots.length - failed.length, failed.length, OUT));

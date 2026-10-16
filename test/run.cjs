@@ -183,6 +183,25 @@ const cases = [
     const r = shot('config.badtime.json');
     return r.status === 1 && r.out.includes('freezeTime "tomorrow" is not a date') || r.out;
   }],
+  ['guide: front matter, revision row, reminder to raise the version', () => {
+    const md = path.join(__dirname, 'output', 'guide-version.md');
+    for (const f of [path.join(__dirname, '.gushot', 'guide.json'), path.join(__dirname, 'output', 'g01_login.png')]) fs.rmSync(f, { force: true });
+    const run = (v, t) => spawnSync(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), 'config.guide.json', '--md', 'output/guide-version.md'], {
+      cwd: __dirname, encoding: 'utf8', env: { ...process.env, GUIDE_VERSION: v, PREV_TEXT: t },
+    }).stdout;
+    const day = new Date().toLocaleDateString('sv');
+    const a = run('1.0', 'A');
+    const head = fs.readFileSync(md, 'utf8');
+    const b = run('1.0', 'B');
+    const c = run('1.1', 'C');
+    const ok = head.startsWith(`---\nversion: "1.0"\ndate: ${day}\nappVersion: "Test 1"\n---\n\n> GuShot run ${day}: new: g01_login\n\n<!-- Revision row: | 1.0 | ${day} | new: g01_login | (reason) | -->`)
+      && !a.includes('raise guide.version') && b.includes('Images changed since version 1.0') && !c.includes('raise guide.version');
+    return ok || a + b + c + head;
+  }],
+  ['guide without a version fails clearly', () => {
+    const r = shot('config.guide-noversion.json');
+    return r.status === 1 && r.out.includes('"guide" needs a "version"') || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- New root key `guide` (alias `panduan`): `{ "version", "date", "appVersion" }`. `--md` starts the skeleton with them as YAML front matter, for the guide's cover, plus a suggested revision row. GuShot reminds you to raise `version` when images changed since the last run with the same version.
+
 ## 1.6.0 (2026-10-16)
 
 - New root key `init` (alias `awal`): helper code for `js` steps, run on every page before its own scripts and after every navigation. Write shared helpers once instead of repeating them in every shot. A string, or `{ "file": "helpers.js" }`.

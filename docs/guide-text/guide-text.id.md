@@ -49,7 +49,9 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 5. Click Save order
 ```
 
-Kerangka diawali baris seperti `> GuShot run 2026-10-15: changed: 02_order_form` (dengan `"lang": "id"`: `> Run GuShot 2026-10-15: berubah: 02_order_form`). Pakai baris ini untuk riwayat revisi panduan: naikkan versi dokumen dan tambahkan satu baris untuk bagian yang memakai gambar tersebut.
+Dengan `"guide": { "version": "1.0" }` di config (seperti di contoh ini), kerangka diawali front matter (`version`, `date`) yang bisa dicetak di sampul oleh pembuat PDF atau situs, dan menyarankan satu baris riwayat revisi. Kalau gambar berubah tapi versinya tetap, GuShot mengingatkan untuk menaikkannya.
+
+Kerangka juga memuat baris seperti `> GuShot run 2026-10-15: changed: 02_order_form` (dengan `"lang": "id"`: `> Run GuShot 2026-10-15: berubah: 02_order_form`). Pakai baris ini untuk riwayat revisi panduan: naikkan versi dokumen dan tambahkan satu baris untuk bagian yang memakai gambar tersebut.
 
 Kerangka ini ditimpa setiap kali dijalankan. Salin isinya ke panduan yang sebenarnya, lalu tulis bagian lainnya (tujuan, hasil, penjelasan) di sana. Setelah UI berubah, jalankan ulang dan bandingkan kerangka dengan git untuk melihat langkah mana yang berubah.
 

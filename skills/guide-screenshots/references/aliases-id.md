@@ -6,6 +6,7 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 
 | Indonesia | English | Arti |
 |---|---|---|
+| `panduan`: `versi`, `tanggal`, `versiAplikasi` | `guide`: `version`, `date`, `appVersion` | versi dokumen panduan |
 | `awal` | `init` | kode pembantu untuk langkah `js`, dijalankan di setiap halaman |
 | `bekukanWaktu` | `freezeTime` | jam halaman mulai dari waktu ini |
 | `bahasa` | `lang` | bahasa pesan terminal |

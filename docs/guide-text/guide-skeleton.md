@@ -1,4 +1,9 @@
-> GuShot run 2026-10-15: no image changes
+---
+version: "1.0"
+date: 2026-10-16
+---
+
+> GuShot run 2026-10-16: no image changes
 
 ## 01_orders
 

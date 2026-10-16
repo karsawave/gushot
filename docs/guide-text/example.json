@@ -1,5 +1,6 @@
 {
   "out": "screenshots",
+  "guide": { "version": "1.0" },
   "viewport": { "width": 1100, "height": 640 },
   "alwaysBlur": [".phone", ".contact"],
   "replaceText": { "Budi Santoso": "Sample Customer A", "Siti Aminah": "Sample Customer B", "Andi Wijaya": "Sample Customer C", "Dewi Lestari": "Sample Customer D" },

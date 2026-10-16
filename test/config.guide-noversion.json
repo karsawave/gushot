@@ -1,0 +1,5 @@
+{
+  "out": "output",
+  "guide": { "appVersion": "Test 1" },
+  "shots": [{ "name": "g02_never_runs", "url": "./page.html" }]
+}
