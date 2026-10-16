@@ -237,6 +237,10 @@ const cases = [
     return r.status === 0 && r.out.includes('Done: 4 OK, 0 failed') && en.includes('## v02_variant_session-en') && !en.includes('-id')
       && id.includes('*Figure 2 Session*') && id.includes('## v01_login-id') || r.out + en + id;
   }],
+  ['frame: steps inside an iframe, clear error when it is missing', () => {
+    const r = shot('config.frame.json', '--check');
+    return r.status === 1 && r.out.includes('f01_iframe_form (checked') && r.out.includes('iframe #nope not found') || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

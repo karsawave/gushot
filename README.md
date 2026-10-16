@@ -45,7 +45,7 @@ GuShot drives Chrome or Edge, so it works for **web apps** you can run with samp
 | Dates, clocks, "2 hours ago" | `"freezeTime": "2026-01-15T09:00:00"` fixes dates made in the browser; dates printed by the server need sample data with fixed dates |
 | Live charts, animations | the image changes every run; `hide` that part or fix it with a `js` step |
 | Canvas or WebGL (maps, drawing editors) | captured, but `clickText`, `fill`, and `replaceText` cannot reach inside |
-| Iframes from another domain (payment pages) | captured, but their fields cannot be clicked or filled |
+| Forms inside an iframe (payment pages, embedded editors) | add `"frame": "#iframe"` to a step to click or fill inside it; highlight and blur still work on the main page only |
 | Downloads, print dialogs, OS dialogs | not captured |
 | CSS classes that change every build | configs break often; use `clickText`, `fill` by label, or ask for stable `data-*` attributes |
 | Desktop or native mobile apps | not supported |

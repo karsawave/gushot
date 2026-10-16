@@ -1,0 +1,12 @@
+{
+  "out": "output",
+  "shots": [
+    { "name": "f01_iframe_form", "url": "./frame.html", "steps": [
+      { "frame": "#pay", "fill": { "Card number": "4111 1111" } },
+      { "frame": "#pay", "clickText": "Pay now" },
+      { "frame": "#pay", "waitText": "Paid", "timeout": 3000 },
+      { "frame": "#pay", "js": "if (document.querySelector('#card').value !== '4111 1111') throw new Error('not filled')" }
+    ] },
+    { "name": "f02_missing_frame", "url": "./frame.html", "steps": [{ "frame": "#nope", "click": "button", "timeout": 1000 }] }
+  ]
+}

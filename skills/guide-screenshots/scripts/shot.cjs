@@ -61,6 +61,7 @@ const MSG = {
     loginNeeds: '--login needs "keepLogin" (minutes) in the config, and the session needs an "open" step and a "wait" selector that only shows when logged in',
     loginWaiting: (n, sel) => `Log in as "${n}" in the browser window. Waiting up to 5 minutes for ${sel} ...`,
     loginSaved: (n, f, m) => `Login for "${n}" saved to ${f}; runs in the next ${m} minutes skip the login`,
+    noFrame: (sel) => `iframe ${sel} not found, or it has no page loaded`,
     noDevice: (n, l) => `unknown device "${n}"${l.length ? `, did you mean: ${l.join(', ')}` : ''} (names as in puppeteer KnownDevices)`,
     guideAlt: (w, n, a, c) => `${w}: ${n} alt text "${a}" differs from its caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: ${n} caption line "${a}" differs from its caption "${c}"`,
@@ -102,6 +103,7 @@ const MSG = {
     loginNeeds: '--login butuh "keepLogin" (menit) di config, dan sesinya butuh langkah "open" serta selector "wait" yang hanya muncul setelah login',
     loginWaiting: (n, sel) => `Silakan login sebagai "${n}" di jendela browser. Menunggu ${sel} paling lama 5 menit ...`,
     loginSaved: (n, f, m) => `Login "${n}" disimpan di ${f}; run dalam ${m} menit ke depan tidak perlu login`,
+    noFrame: (sel) => `iframe ${sel} tidak ditemukan, atau belum memuat halaman`,
     noDevice: (n, l) => `perangkat "${n}" tidak dikenal${l.length ? `, mungkin: ${l.join(', ')}` : ''} (nama sesuai KnownDevices puppeteer)`,
     guideAlt: (w, n, a, c) => `${w}: teks alt ${n} "${a}" beda dengan caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: baris keterangan ${n} "${a}" beda dengan caption "${c}"`,
@@ -126,7 +128,7 @@ const ALIAS = {
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText', perangkat: 'device', bab: 'chapter', lewatiNomor: 'skipNumbers' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
-    gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
+    gulirKe: 'scrollTo', perintah: 'run', isi: 'fill', bingkai: 'frame' },
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
   highlight: { catatan: 'note', teks: 'text' },
   guide: { versi: 'version', tanggal: 'date', versiAplikasi: 'appVersion' },
@@ -140,7 +142,7 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 const KEYS = {
   root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device captionNumber variants sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText device chapter skipNumbers',
-  step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
+  step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp frame',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note text',
   guide: 'version date appVersion',
@@ -271,7 +273,9 @@ async function byText(page, text, selector = 'button, a, [role=button], label, s
   return el;
 }
 
-const settle = (page, ms = 400) => page.waitForNetworkIdle({ idleTime: ms, timeout: 15000 }).catch(() => {});
+// A step can run in an iframe (`frame`); then `page` is that frame, and page-wide things go to its page.
+const pageOf = (p) => (p.page ? p.page() : p);
+const settle = (page, ms = 400) => pageOf(page).waitForNetworkIdle({ idleTime: ms, timeout: 15000 }).catch(() => {});
 
 // Pick an option of a <select> by value or by the start of its text, waiting for options that load
 // later (AJAX). A native change event is enough for Select2 and similar plugins: they listen to it.
@@ -354,14 +358,22 @@ function findByLabel(page, label, within) {
 
 // One step = one object with one action key. See README for the list.
 async function run(page, l) {
+  if (l.frame) {
+    // { "frame": "#payment", "fill": {...} }: the same step, inside that iframe (also another domain's).
+    const h = await page.waitForSelector(l.frame, { timeout: l.timeout ?? 15000 }).catch(() => null);
+    const inner = await h?.contentFrame();
+    if (!inner) throw new Error(T.noFrame(l.frame));
+    const { frame, ...step } = l;
+    return run(inner, step);
+  }
   if (l.open) { await page.goto(absUrl(l.open), { waitUntil: 'networkidle2' }); return; }
   if (l.type) { await page.waitForSelector(l.type, { visible: true }); await page.click(l.type, { clickCount: 3 }); await page.type(l.type, String(l.text ?? '')); return; }
   if (l.click) { await page.waitForSelector(l.click, { visible: true }); await page.click(l.click); await settle(page); return; }
   if (l.clickText) { await (await byText(page, l.clickText, l.within)).click(); await settle(page); return; }
   if (l.select) { await choose(page, await page.waitForSelector(l.select, { timeout: l.timeout ?? 15000 }), l.value, l.timeout); await settle(page); return; }
   if (l.fill) { await fillByLabel(page, l.fill, l.within, l.timeout); await settle(page); return; }
-  if (l.cookie) { await page.browserContext().setCookie({ path: '/', ...(BASE ? { domain: new URL(BASE).hostname } : {}), ...l.cookie }); return; }
-  if (l.press) { await page.keyboard.press(l.press); await settle(page); return; }
+  if (l.cookie) { await pageOf(page).browserContext().setCookie({ path: '/', ...(BASE ? { domain: new URL(BASE).hostname } : {}), ...l.cookie }); return; }
+  if (l.press) { await pageOf(page).keyboard.press(l.press); await settle(page); return; }
   if (l.wait !== undefined) {
     if (typeof l.wait === 'number') await sleep(l.wait);
     else await page.waitForSelector(l.wait, { visible: true, timeout: l.timeout ?? 15000 });

@@ -45,7 +45,7 @@ GuShot menjalankan Chrome atau Edge, jadi cocok untuk **aplikasi web** yang bisa
 | Tanggal, jam, "2 jam lalu" | `"freezeTime": "2026-01-15T09:00:00"` menetapkan tanggal yang dibuat di browser; tanggal yang dicetak server butuh data contoh bertanggal tetap |
 | Grafik live, animasi | gambar berubah setiap run; sembunyikan dengan `hide` atau tetapkan nilainya lewat langkah `js` |
 | Canvas atau WebGL (peta, editor gambar) | ikut terpotret, tapi `clickText`, `fill`, dan `replaceText` tidak bisa menjangkau isinya |
-| Iframe dari domain lain (halaman pembayaran) | ikut terpotret, tapi kolomnya tidak bisa diklik atau diisi |
+| Form di dalam iframe (halaman pembayaran, editor tersisip) | tambahkan `"frame": "#iframe"` pada langkah untuk klik atau isi di dalamnya; sorotan dan blur tetap hanya untuk halaman utama |
 | Unduhan, dialog cetak, dialog bawaan OS | tidak terpotret |
 | Class CSS yang berganti setiap build | config sering rusak; pakai `clickText`, `fill` berdasarkan label, atau minta atribut `data-*` yang tetap |
 | Aplikasi desktop atau mobile native | tidak didukung |

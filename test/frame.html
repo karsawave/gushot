@@ -1,0 +1,6 @@
+<!doctype html>
+<!-- A form inside an iframe, like an embedded payment or editor form, for the `frame` step. -->
+<html><body>
+<h1>Checkout</h1>
+<iframe id="pay" style="width:400px;height:220px" srcdoc="<label for='card'>Card number</label> <input id='card'> <button onclick=&quot;document.body.insertAdjacentHTML('beforeend','<p>Paid</p>')&quot;>Pay now</button>"></iframe>
+</body></html>

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Any step takes `frame` (alias `bingkai`), an iframe selector, to run inside that iframe, also one from another domain: fill an embedded payment form, click in an embedded editor.
 - New root key `variants` (alias `varian`): takes every shot once per language or theme, saved as `<name><suffix>`. A variant can run steps after login (switch the language), and set `theme` and `viewport`. `--md` writes one skeleton per variant.
 - New `--login <session>` for logins that cannot be scripted (SSO, captcha, OTP by SMS): opens a visible browser on the session's first page, waits until you have logged in by hand, and saves the login for `keepLogin`. Later runs reuse it.
 - New root key `captionNumber` (alias `nomorGambar`), with shot keys `chapter` (`bab`) and `skipNumbers` (`lewatiNomor`): numbers the captions (`"Gambar {chapter}.{n}"`) in config order for `--md` and `--guide`, so adding a shot in the middle no longer means renumbering by hand. `skipNumbers` leaves numbers free for diagrams.
