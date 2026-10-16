@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.0 (2026-10-16)
 
 - Any step takes `frame` (alias `bingkai`), an iframe selector, to run inside that iframe, also one from another domain: fill an embedded payment form, click in an embedded editor.
 - New root key `variants` (alias `varian`): takes every shot once per language or theme, saved as `<name><suffix>`. A variant can run steps after login (switch the language), and set `theme` and `viewport`. `--md` writes one skeleton per variant.
