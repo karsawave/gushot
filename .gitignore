@@ -3,9 +3,5 @@ output/
 hasil/
 *.log
 
-# local editor/agent settings
-.claude/settings.local.json
-.impeccable/
-
 # saved logins (keepLogin); each folder also has its own .gitignore
 .gushot/
