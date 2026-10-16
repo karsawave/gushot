@@ -1,0 +1,11 @@
+{
+  "out": "output",
+  "init": "var answer = 42; window.twice = (x) => x * 2;",
+  "shots": [
+    { "name": "i01_helpers_after_navigation", "url": "./page.html", "steps": [
+      { "js": "if (twice(2) !== 4 || answer !== 42) throw new Error('init missing')" },
+      { "open": "./cookie.html" },
+      { "js": "if (twice(3) !== 6 || answer !== 42) throw new Error('init missing after open')" }
+    ] }
+  ]
+}

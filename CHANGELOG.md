@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- New root key `init` (alias `awal`): helper code for `js` steps, run on every page before its own scripts and after every navigation. Write shared helpers once instead of repeating them in every shot. A string, or `{ "file": "helpers.js" }`.
+- Self-test: the `--md` run line in Indonesian and with `--check`, and a clear failure for a `freezeTime` that is not a date.
 - New root key `freezeTime` (alias `bekukanWaktu`): the page's clock starts at a fixed time and keeps running, so "today", calendars, and "2 hours ago" no longer make images `changed` on every run. Dates printed by the server are not affected.
 - A `changed` shot keeps the image it replaced in `.gushot/prev/<name>.png` next to the config (git-ignored) and names it in the `OK` line, so the change can be compared side by side.
 - After a run, GuShot lists PNG files in the output folder that no shot makes, usually left over after a shot was renamed or removed.

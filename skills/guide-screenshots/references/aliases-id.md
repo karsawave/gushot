@@ -6,6 +6,7 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 
 | Indonesia | English | Arti |
 |---|---|---|
+| `awal` | `init` | kode pembantu untuk langkah `js`, dijalankan di setiap halaman |
 | `bekukanWaktu` | `freezeTime` | jam halaman mulai dari waktu ini |
 | `bahasa` | `lang` | bahasa pesan terminal |
 | `ingatLogin` | `keepLogin` | simpan login antar-run (menit) |

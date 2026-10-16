@@ -164,6 +164,25 @@ const cases = [
     fs.rmSync(f);
     return /that no shot makes \(renamed or removed\?\): .*zz_orphan\.png/.test(r.out) || r.out;
   }],
+  ['init: helpers are there on every page, also after open', () => {
+    const r = shot('config.init.json', '--check');
+    return r.status === 0 && r.out.includes('Done: 1 OK, 0 failed') || r.out;
+  }],
+  ['--md run line: Indonesian, and --check', async () => {
+    const md = path.join(__dirname, 'output', 'guide.md');
+    const day = new Date().toLocaleDateString('sv');
+    for (const f of ['x01_login.png', 'x02_text_still_replaced.png']) fs.rmSync(path.join(__dirname, 'output', f), { force: true });
+    const a = await shotAsync({ GUSHOT_LANG: 'id' }, 'config.text.json', '--md', 'output/guide.md');
+    const id = fs.readFileSync(md, 'utf8');
+    const b = shot('config.text.json', '--check', '--md', 'output/guide.md');
+    const check = fs.readFileSync(md, 'utf8');
+    return id.startsWith(`> Run GuShot ${day}: baru: x01_login, x02_text_still_replaced\n`)
+      && check.startsWith(`> GuShot run ${day} (--check, no images saved)\n`) || a.out + b.out + id + check;
+  }],
+  ['freezeTime that is not a date fails clearly', () => {
+    const r = shot('config.badtime.json');
+    return r.status === 1 && r.out.includes('freezeTime "tomorrow" is not a date') || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

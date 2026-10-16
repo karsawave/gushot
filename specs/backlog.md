@@ -4,7 +4,7 @@ Status per 2026-10-16. Urutan sesuai prioritas. Setiap item mengikuti aturan AGE
 
 ---
 
-## 1. Script pembantu bersama (`init`)
+## 1. Script pembantu bersama (`init`) — SELESAI (Unreleased)
 
 **Masalah.** Config ITSM mengulang blok `js` yang sama (`sleep`, `clickText`, `fill`, `stripTag`) di 35 shot. Kalau satu fungsi diperbaiki, 35 salinannya harus ikut diubah.
 
@@ -17,8 +17,8 @@ Status per 2026-10-16. Urutan sesuai prioritas. Setiap item mengikuti aturan AGE
 
 **Perilaku.**
 - Dijalankan di setiap dokumen baru lewat `page.evaluateOnNewDocument` di `newPage()`, jadi tetap ada setelah navigasi, termasuk di sesi login dan shot `video`.
-- Kode dijalankan setelah DOM siap (dibungkus `DOMContentLoaded` bila `document.body` belum ada), karena pembantu biasanya menyentuh DOM.
-- Kalau ada error di `init`, error itu dicetak sekali per shot sebagai `WARN init: <pesan>`, dan shot tetap berjalan.
+- Kode dijalankan sebelum script halaman, saat `<body>` belum ada. Pekerjaan DOM harus ditaruh di dalam fungsi. Ini disederhanakan dari rencana awal (menunggu `DOMContentLoaded`), karena pembungkus fungsi membuat `var` tidak lagi global.
+- Error di `init` hanya muncul di console halaman, tidak dilaporkan GuShot.
 
 **Batasan.** Variabel harus dideklarasikan dengan `var` atau dipasang ke `window` supaya terlihat dari langkah `js`.
 
@@ -28,7 +28,7 @@ Status per 2026-10-16. Urutan sesuai prioritas. Setiap item mengikuti aturan AGE
 
 ---
 
-## 2. Kasus uji yang kurang
+## 2. Kasus uji yang kurang — SELESAI
 
 **Masalah.** Baris run di awal kerangka `--md` hanya diuji untuk bahasa Inggris tanpa `--check`.
 

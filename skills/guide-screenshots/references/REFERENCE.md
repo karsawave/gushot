@@ -15,6 +15,7 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `theme` | `light` / `dark` (prefers-color-scheme) |
 | `alwaysBlur` | CSS selectors blurred in every shot |
 | `replaceText` | `{ "real text": "sample text" }` swapped in every shot, in page text and form fields; `""` removes the text. Merged with the shot's own `replaceText` |
+| `init` | helper code for `js` steps, run at the start of every page before the page's own scripts, also after each navigation: `"var sleep = (ms) => new Promise((r) => setTimeout(r, ms));"`, or `{ "file": "helpers.js" }` relative to the config. Declare helpers with `var` or on `window`. The page has no `<body>` yet when it runs, so put DOM work inside functions |
 | `freezeTime` | the page's clock starts at this time and keeps running, e.g. `"2026-01-15T09:00:00"`: "today", calendars, and "2 hours ago" stay the same between runs. Only dates made in the browser; dates the server prints are not affected (use sample data with fixed dates, or `replaceText`) |
 | `blurStrength` | blur radius in px (default 6) |
 | `highlightColor` | highlight box color (default `#e11d48`) |

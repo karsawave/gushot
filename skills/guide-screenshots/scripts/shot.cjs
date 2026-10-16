@@ -95,7 +95,7 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
@@ -110,7 +110,7 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime sessions shots',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
@@ -159,6 +159,8 @@ for (const n of Object.keys(cfg.sessions || {})) cfg.sessions[n] = cfg.sessions[
 
 const BASE = (cfg.base || '').replace(/\/$/, '');
 const OUT = path.resolve(configDir, cfg.out || 'output');
+// "init": "code" or { "file": "helpers.js" } (relative to the config).
+const INIT = cfg.init?.file ? fs.readFileSync(path.resolve(configDir, cfg.init.file), 'utf8') : cfg.init;
 // scale 2 = sharp images for print/PDF and HiDPI screens (pixel size doubles).
 const VIEWPORT = { width: 1280, height: 900, deviceScaleFactor: cfg.scale ?? 1, ...(cfg.viewport || {}) };
 // "./page.html" = local file relative to the config folder.
@@ -331,6 +333,9 @@ async function newPage(browser) {
   // freezeTime: the page's clock starts at that moment and runs on from there, so "today" and
   // "2 hours ago" stay the same between runs while timers and animations still work.
   // Only dates made in the browser; dates the server prints are not affected.
+  // init: shared helper code for `js` steps, run at the start of every page (before the page's own
+  // scripts), so `var` and `window.x` helpers are there after every navigation.
+  if (INIT) await page.evaluateOnNewDocument(INIT);
   if (cfg.freezeTime) {
     const at = new Date(cfg.freezeTime).getTime();
     if (Number.isNaN(at)) throw new Error(T.badTime(cfg.freezeTime));

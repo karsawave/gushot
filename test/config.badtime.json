@@ -1,0 +1,5 @@
+{
+  "out": "output",
+  "freezeTime": "tomorrow",
+  "shots": [{ "name": "b01_bad_time", "url": "./page.html" }]
+}
