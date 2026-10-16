@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 (2026-10-16)
 
 - New root key `init` (alias `awal`): helper code for `js` steps, run on every page before its own scripts and after every navigation. Write shared helpers once instead of repeating them in every shot. A string, or `{ "file": "helpers.js" }`.
 - Self-test: the `--md` run line in Indonesian and with `--check`, and a clear failure for a `freezeTime` that is not a date.
