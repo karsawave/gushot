@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- New root key `freezeTime` (alias `bekukanWaktu`): the page's clock starts at a fixed time and keeps running, so "today", calendars, and "2 hours ago" no longer make images `changed` on every run. Dates printed by the server are not affected.
+- A `changed` shot keeps the image it replaced in `.gushot/prev/<name>.png` next to the config (git-ignored) and names it in the `OK` line, so the change can be compared side by side.
+- After a run, GuShot lists PNG files in the output folder that no shot makes, usually left over after a shot was renamed or removed.
+
 ## 1.5.0 (2026-10-15)
 
 - `--md` starts the skeleton with a line recording the run date and the `changed` and `new` shots, to copy into the guide's revision history.

@@ -41,7 +41,8 @@ GuShot menjalankan Chrome atau Edge, jadi cocok untuk **aplikasi web** yang bisa
 | Login SSO atau captcha | pakai cookie sesi yang sudah ada (langkah `cookie`) |
 | OTP lewat SMS atau aplikasi authenticator | matikan 2FA di server lokal, atau pakai `cookie` |
 | Server produksi tanpa data contoh | bisa, tapi gambar ikut berubah mengikuti data, data asli bisa terpotret, dan langkah yang menyimpan menulis ke produksi. Pakai salinan lokal |
-| Grafik live, jam, animasi | gambar berubah setiap run; sembunyikan dengan `hide` atau tetapkan nilainya lewat langkah `js` |
+| Tanggal, jam, "2 jam lalu" | `"freezeTime": "2026-01-15T09:00:00"` menetapkan tanggal yang dibuat di browser; tanggal yang dicetak server butuh data contoh bertanggal tetap |
+| Grafik live, animasi | gambar berubah setiap run; sembunyikan dengan `hide` atau tetapkan nilainya lewat langkah `js` |
 | Canvas atau WebGL (peta, editor gambar) | ikut terpotret, tapi `clickText`, `fill`, dan `replaceText` tidak bisa menjangkau isinya |
 | Iframe dari domain lain (halaman pembayaran) | ikut terpotret, tapi kolomnya tidak bisa diklik atau diisi |
 | Unduhan, dialog cetak, dialog bawaan OS | tidak terpotret |
@@ -161,6 +162,7 @@ node <path>/shot.cjs panduan.json --md kerangka.md   # sekaligus menulis kerangk
 - `--check` menjalankan semua langkah tanpa menyimpan gambar. Pakai setelah tampilan berubah, atau di CI, untuk menemukan selector yang rusak lebih awal.
 - `--md <file>` menulis, per shot, `caption`-nya, gambarnya, dan teks langkah dari sorotan sebagai daftar bernomor. File ini ditimpa setiap run: salin isinya ke panduan Anda. Lihat [tutorial 7](docs/guide-text/guide-text.id.md).
 - `"scale": 2` di config menghasilkan gambar resolusi ganda yang tetap tajam di PDF atau layar HiDPI.
+- Gambar yang `changed` menyimpan gambar lamanya di `.gushot/prev/`, dan setiap run mendaftar gambar di folder output yang tidak lagi dibuat shot mana pun.
 - `"keepLogin": 60` di config menyimpan login tiap sesi selama 60 menit, jadi run berikutnya tidak perlu login dan OTP lagi. Disimpan di `.gushot/` di samping config, yang otomatis diabaikan git.
 - Tambahkan `"headless": false` di config untuk melihat browser saat bekerja.
 

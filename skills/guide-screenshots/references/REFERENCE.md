@@ -15,6 +15,7 @@ Indonesian keys are accepted as aliases: [aliases-id.md](aliases-id.md).
 | `theme` | `light` / `dark` (prefers-color-scheme) |
 | `alwaysBlur` | CSS selectors blurred in every shot |
 | `replaceText` | `{ "real text": "sample text" }` swapped in every shot, in page text and form fields; `""` removes the text. Merged with the shot's own `replaceText` |
+| `freezeTime` | the page's clock starts at this time and keeps running, e.g. `"2026-01-15T09:00:00"`: "today", calendars, and "2 hours ago" stay the same between runs. Only dates made in the browser; dates the server prints are not affected (use sample data with fixed dates, or `replaceText`) |
 | `blurStrength` | blur radius in px (default 6) |
 | `highlightColor` | highlight box color (default `#e11d48`) |
 | `css` | extra CSS while capturing (e.g. hide a debug bar) |
@@ -74,6 +75,8 @@ OTP: the code is capture group 1 of the last `pattern` match written to `file` a
 ## Output and exit codes
 
 - One line per shot: `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>` (`GAGAL` with `lang: id`), then a summary and `Changed: X, new: Y.` The state compares the file with the one it replaces, so after a rerun you know which images to update in the guide.
+- A `changed` shot also prints `before: .gushot/prev/<name>.png`: the image it replaced, kept next to the config (git-ignored) so you can compare the two. Overwritten at the next change.
+- `Images in <out> that no shot makes (...)`: PNG files in the output folder that no shot in the config produces, usually left over after a shot was renamed or removed. Delete them, or fix the guide if it still uses them. Works best with one output folder per config.
 - A `video` shot prints `OK <file> (video)`; videos are not compared with the previous file.
 - `WARN unknown key "x"` (`PERINGATAN` with `lang: id`): a config key the tool does not know, most likely a typo; it is ignored. Keys starting with `_` or `$` are allowed for comments.
 - `--check` anywhere on the command line runs every step and checks that `element` exists, but saves no images. Use it after UI changes, or in CI, to find broken selectors.

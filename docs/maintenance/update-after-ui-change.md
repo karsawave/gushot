@@ -71,6 +71,12 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.json button hide  # 01 and 02
 ```
 
+## What changed, and what is left over
+
+Each `changed` line also names the image it replaced, for example `(changed, before: .gushot/prev/01_highlight_button.png)`. Open the two side by side to see what moved before you update the text. The folder is git-ignored and is overwritten at the next change.
+
+If you renamed or removed a shot, its old PNG is still in the output folder. GuShot lists such files after the run (`Images in screenshots that no shot makes ...`). Delete them, and check the guide does not still point at them.
+
 ## The guide text
 
 If the shots carry a `caption` and step `text` ([tutorial 7](../guide-text/guide-text.md)), add `--md guide-skeleton.md` to the run and compare the skeleton with git: the sections that changed are the text to update. A `waitText` step for each label the guide quotes makes `--check` fail when the app renames it.

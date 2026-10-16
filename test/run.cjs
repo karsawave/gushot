@@ -142,6 +142,28 @@ const cases = [
     const want = '## x01_login\n\n![Login page](x01_login.png)\n\n*Login page*\n\n1. Enter your email\n2. Click Masuk\n\n## x02_text_still_replaced';
     return r.status === 0 && fs.existsSync(md) && fs.readFileSync(md, 'utf8').startsWith(run + want) || r.out;
   }],
+  ['freezeTime: page clock starts at the given time and keeps running', () => {
+    const r = shot('config.time.json');
+    return r.status === 0 && r.out.includes('Done: 1 OK, 0 failed') || r.out;
+  }],
+  ['changed shot keeps the previous image in .gushot/prev', () => {
+    const prev = path.join(__dirname, '.gushot', 'prev', 'p01_login.png');
+    fs.rmSync(prev, { force: true });
+    const run = (t) => spawnSync(process.execPath, [path.join(__dirname, '../skills/guide-screenshots/scripts/shot.cjs'), 'config.prev.json'], {
+      cwd: __dirname, encoding: 'utf8', env: { ...process.env, PREV_TEXT: t },
+    }).stdout;
+    run('Before');
+    const a = run('After');
+    const b = run('After');
+    return a.includes('(changed, before: ') && fs.existsSync(prev) && b.includes('p01_login.png (unchanged)') || a + b;
+  }],
+  ['orphan images in the output folder are listed', () => {
+    const f = path.join(__dirname, 'output', 'zz_orphan.png');
+    fs.writeFileSync(f, ''); // only the name matters
+    const r = shot('config.text.json', '--check');
+    fs.rmSync(f);
+    return /that no shot makes \(renamed or removed\?\): .*zz_orphan\.png/.test(r.out) || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

@@ -41,7 +41,8 @@ GuShot drives Chrome or Edge, so it works for **web apps** you can run with samp
 | SSO or captcha login | use an existing session cookie (`cookie` step) |
 | OTP by SMS or an authenticator app | turn 2FA off on the local server, or use `cookie` |
 | Production server without sample data | possible, but images change with the data, real data may show, and steps that save write to production. Use a local copy |
-| Live charts, clocks, animations | the image changes every run; `hide` that part or fix it with a `js` step |
+| Dates, clocks, "2 hours ago" | `"freezeTime": "2026-01-15T09:00:00"` fixes dates made in the browser; dates printed by the server need sample data with fixed dates |
+| Live charts, animations | the image changes every run; `hide` that part or fix it with a `js` step |
 | Canvas or WebGL (maps, drawing editors) | captured, but `clickText`, `fill`, and `replaceText` cannot reach inside |
 | Iframes from another domain (payment pages) | captured, but their fields cannot be clicked or filled |
 | Downloads, print dialogs, OS dialogs | not captured |
@@ -159,6 +160,7 @@ node <path-to>/shot.cjs my-guide.json --md guide-skeleton.md   # also write a Ma
 - `--check` runs every step but saves no images. Use it after a UI change, or in CI, to find broken selectors early.
 - `--md <file>` writes, per shot, its `caption`, the image, and the highlights' step text as a numbered list. The file is overwritten every run: copy from it into your guide. See [tutorial 7](docs/guide-text/guide-text.md).
 - `"scale": 2` in the config gives double-resolution images that stay sharp in a PDF or on a HiDPI screen.
+- A `changed` image keeps the one it replaced in `.gushot/prev/`, and the run lists images in the output folder that no shot makes any more.
 - `"keepLogin": 60` in the config keeps each session's login for 60 minutes, so later runs skip the login and OTP. It is saved in `.gushot/` next to the config, which is git-ignored automatically.
 - Add `"headless": false` to the config to watch the browser while it works.
 

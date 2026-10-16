@@ -1,0 +1,9 @@
+{
+  "out": "output",
+  "freezeTime": "2020-02-02T10:00:00",
+  "shots": [
+    { "name": "z01_frozen_clock", "url": "./page.html", "steps": [
+      { "js": "(async () => { const a = Date.now(), d = new Date(); if (d.getFullYear() !== 2020 || !(d instanceof Date) || !Date().includes('2020')) throw new Error('clock not frozen'); await new Promise((r) => setTimeout(r, 300)); if (Date.now() <= a) throw new Error('clock stopped'); if (new Date(0).getTime() !== 0) throw new Error('new Date(x) changed'); })()" }
+    ] }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "out": "output",
+  "shots": [
+    { "name": "p01_login", "url": "./page.html", "element": "#login", "replaceText": { "Sign in": "{{PREV_TEXT}}" } }
+  ]
+}

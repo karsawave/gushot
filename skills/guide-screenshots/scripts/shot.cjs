@@ -18,7 +18,6 @@ const os = require('os');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { execSync, spawnSync } = require('child_process');
-const crypto = require('crypto');
 let puppeteer;
 try {
   puppeteer = require('puppeteer-core');
@@ -53,6 +52,9 @@ const MSG = {
     state: { new: 'new', changed: 'changed', same: 'unchanged' },
     changes: (c, n) => `Changed: ${c}, new: ${n}.`,
     mdWritten: (f) => `Guide skeleton: ${f}`,
+    before: (f) => `, before: ${f}`,
+    orphans: (out, l) => `Images in ${out} that no shot makes (renamed or removed?): ${l.join(', ')}`,
+    badTime: (v) => `freezeTime "${v}" is not a date, use e.g. "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> GuShot run ${d}: ${[c.length && `changed: ${c.join(', ')}`, n.length && `new: ${n.join(', ')}`].filter(Boolean).join('; ') || 'no image changes'}`,
     mdRunCheck: (d) => `> GuShot run ${d} (--check, no images saved)`,
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
@@ -79,6 +81,9 @@ const MSG = {
     state: { new: 'baru', changed: 'berubah', same: 'sama' },
     changes: (c, n) => `Berubah: ${c}, baru: ${n}.`,
     mdWritten: (f) => `Kerangka panduan: ${f}`,
+    before: (f) => `, sebelumnya: ${f}`,
+    orphans: (out, l) => `Gambar di ${out} yang tidak dibuat shot mana pun (ganti nama atau dihapus?): ${l.join(', ')}`,
+    badTime: (v) => `freezeTime "${v}" bukan tanggal, contoh: "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> Run GuShot ${d}: ${[c.length && `berubah: ${c.join(', ')}`, n.length && `baru: ${n.join(', ')}`].filter(Boolean).join('; ') || 'tidak ada gambar yang berubah'}`,
     mdRunCheck: (d) => `> Run GuShot ${d} (--check, tidak ada gambar yang disimpan)`,
     done: (ok, bad, out) => `\nSelesai: ${ok} OK, ${bad} gagal. Hasil di ${out}`,
@@ -90,7 +95,7 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
@@ -105,7 +110,7 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText sessions shots',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
@@ -323,6 +328,21 @@ async function fillOtp(page, o) {
 async function newPage(browser) {
   const page = await (await browser.createBrowserContext()).newPage();
   if (cfg.theme) await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: cfg.theme }]);
+  // freezeTime: the page's clock starts at that moment and runs on from there, so "today" and
+  // "2 hours ago" stay the same between runs while timers and animations still work.
+  // Only dates made in the browser; dates the server prints are not affected.
+  if (cfg.freezeTime) {
+    const at = new Date(cfg.freezeTime).getTime();
+    if (Number.isNaN(at)) throw new Error(T.badTime(cfg.freezeTime));
+    await page.evaluateOnNewDocument((at) => {
+      const Real = Date, shift = at - Real.now(), now = () => Real.now() + shift;
+      globalThis.Date = new Proxy(Real, {
+        construct: (t, a, nt) => Reflect.construct(Real, a.length ? a : [now()], nt),
+        apply: () => new Real(now()).toString(), // Date() without new
+        get: (t, k) => (k === 'now' ? now : Reflect.get(t, k)),
+      });
+    }, at);
+  }
   return page;
 }
 
@@ -386,7 +406,15 @@ async function newSession(browser, name) {
 }
 
 const outFile = (s) => path.join(OUT, s.name.endsWith('.png') ? s.name : `${s.name}.png`);
-const hashOf = (f) => (fs.existsSync(f) ? crypto.createHash('sha1').update(fs.readFileSync(f)).digest('hex') : null);
+// The image a `changed` shot replaced goes to <config folder>/.gushot/prev/, git-ignored like saved logins.
+function keepPrevious(s, old) {
+  const dir = path.join(configDir, '.gushot');
+  fs.mkdirSync(path.join(dir, 'prev'), { recursive: true });
+  fs.writeFileSync(path.join(dir, '.gitignore'), '*\n');
+  const f = path.join(dir, 'prev', path.basename(outFile(s)));
+  fs.writeFileSync(f, old);
+  return f;
+}
 
 // Highlight (red box, optional numbered badge and callout note) the elements a guide step refers to.
 // Everything is drawn as separate overlay elements on <body>, not on the element itself, so a blur on
@@ -588,13 +616,15 @@ async function capture(page, s) {
       }
       if (s.url) await page.goto(absUrl(s.url), { waitUntil: 'networkidle2' });
       for (const l of s.steps) await run(page, l);
-      const before = hashOf(outFile(s));
+      const old = fs.existsSync(outFile(s)) ? fs.readFileSync(outFile(s)) : null;
       const file = await capture(page, s);
       if (CHECK) console.log(T.ok, T.checked(s.name));
       else {
-        const state = before === null ? 'new' : before === hashOf(file) ? 'same' : 'changed';
+        const state = old === null ? 'new' : old.equals(fs.readFileSync(file)) ? 'same' : 'changed';
         if (state !== 'same') { counts[state]++; touched[state].push(s.name); }
-        console.log(T.ok, path.relative(process.cwd(), file), `(${T.state[state]})`);
+        // Keep the replaced image out of the guide's folder, so the change can be looked at side by side.
+        const prev = state === 'changed' ? keepPrevious(s, old) : null;
+        console.log(T.ok, path.relative(process.cwd(), file), `(${T.state[state]}${prev ? T.before(path.relative(process.cwd(), prev)) : ''})`);
       }
       if (s.viewport) await page.setViewport(VIEWPORT);
     } catch (e) {
@@ -607,6 +637,10 @@ async function capture(page, s) {
   }
 
   await browser.close();
+  // PNGs in the output folder that no shot makes: left over after a shot was renamed or removed.
+  const made = new Set(cfg.shots.map((s) => path.basename(outFile(s))));
+  const orphans = fs.existsSync(OUT) ? fs.readdirSync(OUT).filter((f) => f.endsWith('.png') && !made.has(f)) : [];
+  if (orphans.length) console.log(T.orphans(path.relative(process.cwd(), OUT) || '.', orphans));
   if (MD) {
     // One section per shot that worked, headed by its name (the guide's own headings are section titles): image, caption, then the highlight texts (or notes) as numbered steps.
     const md = shots.filter((s) => !failed.includes(s.name)).map((s) => {

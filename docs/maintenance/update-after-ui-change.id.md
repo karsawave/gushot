@@ -71,6 +71,12 @@ APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.j
 APP_PASSWORD=demo node ../../skills/guide-screenshots/scripts/shot.cjs example.json button hide  # 01 dan 02
 ```
 
+## Apa yang berubah, dan apa yang tersisa
+
+Setiap baris `changed` juga menyebut gambar yang digantikannya, misalnya `(changed, before: .gushot/prev/01_highlight_button.png)`. Buka keduanya berdampingan untuk melihat apa yang berubah sebelum memperbarui teks. Folder ini diabaikan git dan ditimpa saat ada perubahan berikutnya.
+
+Kalau Anda mengganti nama atau menghapus shot, PNG lamanya masih ada di folder output. GuShot mendaftar file seperti itu setelah run (`Images in screenshots that no shot makes ...`). Hapus file itu, dan pastikan panduan tidak lagi memakainya.
+
 ## Teks panduan
 
 Kalau shot memakai `caption` dan `text` langkah ([tutorial 7](../guide-text/guide-text.id.md)), tambahkan `--md kerangka.md` saat menjalankan, lalu bandingkan kerangka dengan git: bagian yang berubah adalah teks yang perlu diperbarui. Langkah `waitText` untuk setiap label yang dikutip panduan membuat `--check` gagal kalau aplikasi mengganti nama label itu.
