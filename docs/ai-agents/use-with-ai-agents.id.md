@@ -59,6 +59,10 @@ gemini skills install https://github.com/rombyar/gushot.git --path skills/guide-
 
 [README utama](../../README.id.md#dipakai-lewat-agen-ai) mencantumkan folder yang dibaca setiap agen dan cara memanggil skill-nya.
 
+### Memperbarui
+
+Salinan yang terpasang tetap di versinya sampai Anda memperbaruinya: lihat [Memperbarui](../../README.id.md#memperbarui) di README.
+
 ## Contoh permintaan
 
 Buka proyek aplikasi Anda di agen, lalu minta:

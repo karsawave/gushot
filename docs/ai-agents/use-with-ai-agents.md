@@ -59,6 +59,10 @@ gemini skills install https://github.com/rombyar/gushot.git --path skills/guide-
 
 The [main README](../../README.md#using-it-with-an-ai-agent) lists the folder each agent reads and how to call the skill.
 
+### Updating
+
+An installed copy keeps its version until you update it: see [Updating](../../README.md#updating) in the README.
+
 ## Example requests
 
 Open your app's project in the agent and ask:

@@ -216,6 +216,13 @@ gemini skills install https://github.com/rombyar/gushot.git --path skills/guide-
 
 For any other agent, check [the list of agents that support skills](https://agentskills.io) and its docs for the folder name. The skill folder has everything it needs; on the first run the agent installs its one dependency inside it.
 
+### Updating
+
+Installed copies do not update themselves, so an agent can keep using an old skill without the newer rules. The version in use is `version` at the top of the skill's `SKILL.md`; compare it with [Releases](https://github.com/rombyar/gushot/releases).
+
+- Claude Code plugin: `/plugin marketplace update gushot`, then update GuShot from `/plugin` (or uninstall and install it again), and start a new session.
+- Copied skill folder: `git pull` in your clone, copy `skills/guide-screenshots` over the old folder again, and run the `npm install` line from Quick start inside it.
+
 ## Troubleshooting
 
 | Problem | Likely cause |
