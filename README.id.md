@@ -41,6 +41,7 @@ GuShot menjalankan Chrome atau Edge, jadi cocok untuk **aplikasi web** yang bisa
 | Login SSO atau captcha | login manual sekali dengan `--login <sesi>` (butuh `keepLogin`), atau pakai cookie sesi yang sudah ada (langkah `cookie`) |
 | OTP lewat SMS atau aplikasi authenticator | login manual dengan `--login`, matikan 2FA di server lokal, atau pakai `cookie` |
 | Server produksi tanpa data contoh | bisa, tapi gambar ikut berubah mengikuti data, data asli bisa terpotret, dan langkah yang menyimpan menulis ke produksi. Pakai salinan lokal |
+| UI beberapa bahasa, atau mode terang dan gelap | `variants` memotret semua shot per bahasa atau tema dari satu config |
 | Tanggal, jam, "2 jam lalu" | `"freezeTime": "2026-01-15T09:00:00"` menetapkan tanggal yang dibuat di browser; tanggal yang dicetak server butuh data contoh bertanggal tetap |
 | Grafik live, animasi | gambar berubah setiap run; sembunyikan dengan `hide` atau tetapkan nilainya lewat langkah `js` |
 | Canvas atau WebGL (peta, editor gambar) | ikut terpotret, tapi `clickText`, `fill`, dan `replaceText` tidak bisa menjangkau isinya |

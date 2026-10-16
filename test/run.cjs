@@ -229,6 +229,14 @@ const cases = [
     return a.status === 0 && a.out.includes('Login for "manual" saved') && fs.existsSync(saved)
       && b.status === 0 && b.out.includes('session "manual": saved login reused') || a.out + b.out;
   }],
+  ['variants: every shot per variant, own sessions and theme, one skeleton each', () => {
+    for (const f of ['v01_login-en.png', 'v01_login-id.png', 'v02_variant_session-en.png', 'v02_variant_session-id.png']) fs.rmSync(path.join(__dirname, 'output', f), { force: true });
+    const r = shot('config.variants.json', '--md', 'output/var.md');
+    const en = fs.readFileSync(path.join(__dirname, 'output', 'var-en.md'), 'utf8');
+    const id = fs.readFileSync(path.join(__dirname, 'output', 'var-id.md'), 'utf8');
+    return r.status === 0 && r.out.includes('Done: 4 OK, 0 failed') && en.includes('## v02_variant_session-en') && !en.includes('-id')
+      && id.includes('*Figure 2 Session*') && id.includes('## v01_login-id') || r.out + en + id;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

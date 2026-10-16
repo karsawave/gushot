@@ -41,6 +41,7 @@ GuShot drives Chrome or Edge, so it works for **web apps** you can run with samp
 | SSO or captcha login | log in by hand once with `--login <session>` (needs `keepLogin`), or use an existing session cookie (`cookie` step) |
 | OTP by SMS or an authenticator app | log in by hand with `--login`, turn 2FA off on the local server, or use `cookie` |
 | Production server without sample data | possible, but images change with the data, real data may show, and steps that save write to production. Use a local copy |
+| UI in several languages, or light and dark | `variants` takes every shot once per language or theme from one config |
 | Dates, clocks, "2 hours ago" | `"freezeTime": "2026-01-15T09:00:00"` fixes dates made in the browser; dates printed by the server need sample data with fixed dates |
 | Live charts, animations | the image changes every run; `hide` that part or fix it with a `js` step |
 | Canvas or WebGL (maps, drawing editors) | captured, but `clickText`, `fill`, and `replaceText` cannot reach inside |

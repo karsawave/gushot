@@ -1,0 +1,15 @@
+{
+  "out": "output",
+  "theme": "light",
+  "captionNumber": "Figure {n}",
+  "variants": [
+    { "suffix": "-en" },
+    { "suffix": "-id", "steps": [{ "open": "./page.html" }, { "js": "window.name = 'id'" }], "theme": "dark" }
+  ],
+  "shots": [
+    { "name": "v01_login", "url": "./page.html", "element": "#login", "caption": "Login" },
+    { "name": "v02_variant_session", "url": "./page.html", "caption": "Session", "steps": [
+      { "js": "if ((window.name === 'id') !== matchMedia('(prefers-color-scheme: dark)').matches) throw new Error('variant steps or theme missing: ' + window.name)" }
+    ] }
+  ]
+}

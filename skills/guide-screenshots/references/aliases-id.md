@@ -8,6 +8,7 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 |---|---|---|
 | `panduan`: `versi`, `tanggal`, `versiAplikasi` | `guide`: `version`, `date`, `appVersion` | versi dokumen panduan |
 | `awal` | `init` | kode pembantu untuk langkah `js`, dijalankan di setiap halaman |
+| `varian`: `akhiran`, `langkah`, `tema` | `variants`: `suffix`, `steps`, `theme` | potret semua shot per bahasa atau tema |
 | `nomorGambar` | `captionNumber` | pola nomor gambar, mis. `"Gambar {chapter}.{n}"` |
 | `bab` | `chapter` | bab untuk `{chapter}`, berlaku sampai bab berikutnya |
 | `lewatiNomor` | `skipNumbers` | kosongkan nomor untuk gambar non-GuShot (diagram) |

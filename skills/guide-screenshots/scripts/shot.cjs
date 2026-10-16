@@ -56,6 +56,7 @@ const MSG = {
     mdWritten: (f) => `Guide skeleton: ${f}`,
     before: (f) => `, before: ${f}`,
     guideNoVersion: '"guide" needs a "version", e.g. { "version": "1.0" }',
+    variantNoSuffix: 'every variant needs a "suffix", e.g. { "suffix": "-en" }',
     guideNoShot: (w, src) => `${w}: ${src} is used by the guide but no shot makes it`,
     loginNeeds: '--login needs "keepLogin" (minutes) in the config, and the session needs an "open" step and a "wait" selector that only shows when logged in',
     loginWaiting: (n, sel) => `Log in as "${n}" in the browser window. Waiting up to 5 minutes for ${sel} ...`,
@@ -96,6 +97,7 @@ const MSG = {
     mdWritten: (f) => `Kerangka panduan: ${f}`,
     before: (f) => `, sebelumnya: ${f}`,
     guideNoVersion: '"guide" butuh "version", contoh: { "version": "1.0" }',
+    variantNoSuffix: 'setiap varian butuh "suffix", contoh: { "suffix": "-en" }',
     guideNoShot: (w, src) => `${w}: ${src} dipakai panduan tapi tidak dibuat shot mana pun`,
     loginNeeds: '--login butuh "keepLogin" (menit) di config, dan sesinya butuh langkah "open" serta selector "wait" yang hanya muncul setelah login',
     loginWaiting: (n, sel) => `Silakan login sebagai "${n}" di jendela browser. Menunggu ${sel} paling lama 5 menit ...`,
@@ -119,7 +121,7 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide', perangkat: 'device', nomorGambar: 'captionNumber' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide', perangkat: 'device', nomorGambar: 'captionNumber', varian: 'variants' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
     sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText', perangkat: 'device', bab: 'chapter', lewatiNomor: 'skipNumbers' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
@@ -128,6 +130,7 @@ const ALIAS = {
   otp: { pola: 'pattern', ke: 'into', kirim: 'submit', coba: 'tries' },
   highlight: { catatan: 'note', teks: 'text' },
   guide: { versi: 'version', tanggal: 'date', versiAplikasi: 'appVersion' },
+  variant: { akhiran: 'suffix', langkah: 'steps', tema: 'theme' },
 };
 const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
   ? Object.fromEntries(Object.entries(o).map(([k, v]) => [map[k] || k, v])) : o);
@@ -135,12 +138,13 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device captionNumber sessions shots',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device captionNumber variants sessions shots',
   shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText device chapter skipNumbers',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note text',
   guide: 'version date appVersion',
+  variant: 'suffix steps theme viewport',
 };
 const warned = new Set();
 const check = (o, kind) => {
@@ -207,6 +211,21 @@ if (cfg.captionNumber) {
 }
 
 const BASE = (cfg.base || '').replace(/\/$/, '');
+// variants: every shot once per variant (language, theme, size), saved as <name><suffix>, each variant in
+// its own browser sessions. Expanded after captionNumber so a shot has the same number in every variant.
+if (cfg.variants) {
+  cfg.variants = cfg.variants.map((v) => {
+    const r = check(alias(v, ALIAS.variant), 'variant');
+    if (!r.suffix) { console.error(T.variantNoSuffix); process.exit(1); }
+    r.steps = (r.steps || []).map(step);
+    return r;
+  });
+  cfg.shots = cfg.variants.flatMap((v) => cfg.shots.map((s) => ({
+    ...s, variant: v, name: s.name.replace(/(\.png)?$/, `${v.suffix}$1`),
+    viewport: v.viewport || s.viewport ? { ...v.viewport, ...s.viewport } : undefined,
+  })));
+}
+
 const OUT = path.resolve(configDir, cfg.out || 'output');
 // "init": "code" or { "file": "helpers.js" } (relative to the config).
 const INIT = cfg.init?.file ? fs.readFileSync(path.resolve(configDir, cfg.init.file), 'utf8') : cfg.init;
@@ -376,9 +395,9 @@ async function fillOtp(page, o) {
   if (o.submit) await run(page, typeof o.submit === 'string' ? { click: o.submit } : o.submit);
 }
 
-async function newPage(browser) {
+async function newPage(browser, theme = cfg.theme) {
   const page = await (await browser.createBrowserContext()).newPage();
-  if (cfg.theme) await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: cfg.theme }]);
+  if (theme) await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: theme }]);
   // freezeTime: the page's clock starts at that moment and runs on from there, so "today" and
   // "2 hours ago" stay the same between runs while timers and animations still work.
   // Only dates made in the browser; dates the server prints are not affected.
@@ -454,12 +473,20 @@ async function saveLogin(page, name, steps) {
   fs.writeFileSync(loginFile(name), JSON.stringify(data), { mode: 0o600 });
 }
 
-async function newSession(browser, name) {
-  let page = await newPage(browser);
+// A session per variant: log in (or restore the saved login), then run the variant's steps, e.g. switch
+// the app's language. The saved login is taken before those steps, so all variants share it.
+async function newSession(browser, name, variant) {
+  const page = await loginSession(browser, name, variant?.theme ?? cfg.theme);
+  for (const l of variant?.steps || []) await run(page, l);
+  return page;
+}
+
+async function loginSession(browser, name, theme) {
+  let page = await newPage(browser, theme);
   const steps = name ? cfg.sessions?.[name] : null;
   if (name && !steps) throw new Error(T.noSession(name));
   if (name && await restoreLogin(page, name, steps)) return page;
-  if (name && cfg.keepLogin) { await page.browserContext().close(); page = await newPage(browser); } // clean slate after a failed restore
+  if (name && cfg.keepLogin) { await page.browserContext().close(); page = await newPage(browser, theme); } // clean slate after a failed restore
   const otpFile = (steps || []).find((x) => x.otp)?.otp.file;
   for (const l of steps || []) {
     // Mark the OTP file size before each trigger step so old codes are ignored.
@@ -705,6 +732,28 @@ async function capture(page, s) {
   return file;
 }
 
+// --md skeleton: front matter (guide), the run line, a revision row to copy, then one section per shot
+// headed by its name (the guide's own headings are section titles): image, caption, numbered steps.
+function writeSkeleton(md, list, changed, added) {
+  const sections = list.map((s) => {
+    const title = s.caption || s.name;
+    const file = s.video ? path.join(OUT, `${s.name}.${s.video === true ? 'mp4' : s.video}`) : outFile(s);
+    const rel = path.relative(path.dirname(md), file).split(path.sep).join('/');
+    const notes = s.highlight.filter((h) => h.text || h.note).map((h, i) => `${h.label || i + 1}. ${h.text || h.note}`);
+    return [`## ${s.name}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(s.caption ? [`*${title}*`] : []), ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
+  });
+  const day = new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
+  const run = CHECK ? T.mdRunCheck(day) : T.mdRun(day, changed, added);
+  const g = cfg.guide;
+  const head = g ? [['---', `version: ${JSON.stringify(String(g.version))}`, `date: ${g.date || day}`,
+    ...(g.appVersion ? [`appVersion: ${JSON.stringify(String(g.appVersion))}`] : []), '---'].join('\n')] : [];
+  const what = [changed.length && `changed: ${changed.join(', ')}`, added.length && `new: ${added.join(', ')}`].filter(Boolean).join('; ');
+  const row = g && !CHECK && what ? [`<!-- ${T.revisionRow(g.version, g.date || day, what)} -->`] : [];
+  fs.mkdirSync(path.dirname(md), { recursive: true });
+  fs.writeFileSync(md, `${[...head, run, ...row, ...sections].join('\n\n')}\n`);
+  console.log(T.mdWritten(path.relative(process.cwd(), md)));
+}
+
 // ---------- main ----------
 (async () => {
   if (!CHECK) fs.mkdirSync(OUT, { recursive: true });
@@ -732,10 +781,10 @@ async function capture(page, s) {
   const touched = { new: [], changed: [] }; // the same, by name, for the --md revision line
 
   for (const s of shots) {
-    const key = s.session || '_guest';
+    const key = `${s.session || '_guest'}${s.variant ? `@${s.variant.suffix}` : ''}`;
     try {
       if (s.freshSession && pages[key]) { await pages[key].browserContext().close(); delete pages[key]; }
-      pages[key] ||= await newSession(browser, s.session);
+      pages[key] ||= await newSession(browser, s.session, s.variant);
       const page = pages[key];
       const viewSet = await setView(page, s);
       if (s.video && !CHECK) {
@@ -779,26 +828,12 @@ async function capture(page, s) {
     if (last === cfg.guide.version && touched.changed.length + touched.new.length) console.log(T.guideNotRaised(last));
     fs.writeFileSync(state, JSON.stringify({ version: cfg.guide.version }));
   }
-  if (MD) {
-    // One section per shot that worked, headed by its name (the guide's own headings are section titles): image, caption, then the highlight texts (or notes) as numbered steps.
-    const md = shots.filter((s) => !failed.includes(s.name)).map((s) => {
-      const title = s.caption || s.name;
-      const file = s.video ? path.join(OUT, `${s.name}.${s.video === true ? 'mp4' : s.video}`) : outFile(s);
-      const rel = path.relative(path.dirname(MD), file).split(path.sep).join('/');
-      const notes = s.highlight.filter((h) => h.text || h.note).map((h, i) => `${h.label || i + 1}. ${h.text || h.note}`);
-      return [`## ${s.name}`, s.video ? `[${title}](${rel})` : `![${title}](${rel})`, ...(s.caption ? [`*${title}*`] : []), ...(notes.length ? [notes.join('\n')] : [])].join('\n\n');
-    });
-    fs.mkdirSync(path.dirname(MD), { recursive: true });
-    const day = new Date().toLocaleDateString('sv'); // local YYYY-MM-DD
-    const run = CHECK ? T.mdRunCheck(day) : T.mdRun(day, touched.changed, touched.new);
-    // guide: YAML front matter for the project's builder (cover page), plus a revision row to copy.
-    const g = cfg.guide;
-    const head = g ? [['---', `version: ${JSON.stringify(String(g.version))}`, `date: ${g.date || day}`,
-      ...(g.appVersion ? [`appVersion: ${JSON.stringify(String(g.appVersion))}`] : []), '---'].join('\n')] : [];
-    const what = [touched.changed.length && `changed: ${touched.changed.join(', ')}`, touched.new.length && `new: ${touched.new.join(', ')}`].filter(Boolean).join('; ');
-    const row = g && !CHECK && what ? [`<!-- ${T.revisionRow(g.version, g.date || day, what)} -->`] : [];
-    fs.writeFileSync(MD, `${[...head, run, ...row, ...md].join('\n\n')}\n`);
-    console.log(T.mdWritten(path.relative(process.cwd(), MD)));
+  // --md: one skeleton, or one per variant (guide-en.md, guide-id.md) since each language is its own guide.
+  for (const v of MD ? cfg.variants || [null] : []) {
+    const file = v ? MD.replace(/(\.md)?$/i, `${v.suffix}$1`) : MD;
+    const own = (n) => !v || n.endsWith(v.suffix);
+    writeSkeleton(file, shots.filter((s) => !failed.includes(s.name) && (!v || s.variant === v)),
+      touched.changed.filter(own), touched.new.filter(own));
   }
   const guideProblems = GUIDE ? checkGuide(path.resolve(GUIDE)) : 0;
   console.log(T.done(shots.length - failed.length, failed.length, OUT));
