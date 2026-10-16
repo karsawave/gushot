@@ -56,6 +56,7 @@ const MSG = {
     before: (f) => `, before: ${f}`,
     guideNoVersion: '"guide" needs a "version", e.g. { "version": "1.0" }',
     guideNoShot: (w, src) => `${w}: ${src} is used by the guide but no shot makes it`,
+    noDevice: (n, l) => `unknown device "${n}"${l.length ? `, did you mean: ${l.join(', ')}` : ''} (names as in puppeteer KnownDevices)`,
     guideAlt: (w, n, a, c) => `${w}: ${n} alt text "${a}" differs from its caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: ${n} caption line "${a}" differs from its caption "${c}"`,
     guideUnused: (l) => `shots not used in the guide (info): ${l.join(', ')}`,
@@ -92,6 +93,7 @@ const MSG = {
     before: (f) => `, sebelumnya: ${f}`,
     guideNoVersion: '"guide" butuh "version", contoh: { "version": "1.0" }',
     guideNoShot: (w, src) => `${w}: ${src} dipakai panduan tapi tidak dibuat shot mana pun`,
+    noDevice: (n, l) => `perangkat "${n}" tidak dikenal${l.length ? `, mungkin: ${l.join(', ')}` : ''} (nama sesuai KnownDevices puppeteer)`,
     guideAlt: (w, n, a, c) => `${w}: teks alt ${n} "${a}" beda dengan caption "${c}"`,
     guideItalic: (w, n, a, c) => `${w}: baris keterangan ${n} "${a}" beda dengan caption "${c}"`,
     guideUnused: (l) => `shot yang tidak dipakai panduan (info): ${l.join(', ')}`,
@@ -110,9 +112,9 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide', perangkat: 'device' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
-    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText' },
+    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText', perangkat: 'device' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
     gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
@@ -126,8 +128,8 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide sessions shots',
-  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device sessions shots',
+  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText device',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note text',
@@ -518,6 +520,33 @@ async function unannotate(page) {
 
 // An element taller than the viewport (a long modal) would be cut off, with the page behind it in
 // the image. Make the viewport tall enough first; the caller restores it.
+// device: a phone or tablet from puppeteer's KnownDevices (size, pixel density, user agent, touch).
+// A shot's viewport still wins; "scale" in the config replaces the device's pixel density.
+function findDevice(name) {
+  const all = puppeteer.KnownDevices;
+  const hit = Object.keys(all).find((k) => k.toLowerCase() === String(name).toLowerCase());
+  if (hit) return all[hit];
+  // Suggest the names sharing the longest start with what was typed, newest (last in the list) first.
+  const typed = String(name).toLowerCase();
+  const shared = (k) => { let i = 0; while (i < k.length && k[i].toLowerCase() === typed[i]) i++; return i; };
+  const names = Object.keys(all).filter((k) => !/landscape/i.test(k)).reverse();
+  const best = Math.max(...names.map(shared));
+  throw new Error(T.noDevice(name, best >= 3 ? names.filter((k) => shared(k) === best).slice(0, 5) : []));
+}
+async function setView(page, s) {
+  const name = s.device ?? cfg.device;
+  if (!name && !s.viewport) return false;
+  const d = name ? findDevice(name) : null;
+  if (d) await page.setUserAgent(d.userAgent);
+  await page.setViewport({ ...(d ? { ...d.viewport, ...(cfg.scale ? { deviceScaleFactor: cfg.scale } : {}) } : VIEWPORT), ...s.viewport });
+  return true;
+}
+let UA; // the browser's own user agent, set at launch
+async function resetView(page) {
+  await page.setUserAgent(UA);
+  await page.setViewport(VIEWPORT);
+}
+
 async function fitViewport(page, el, s) {
   const vp = page.viewport();
   const need = await el.evaluate((e, p) => {
@@ -656,6 +685,7 @@ async function capture(page, s) {
     await sleep(1000);
     return launch();
   });
+  UA = await browser.userAgent(); // restored after a shot with "device"
   const pages = {}; // one logged-in tab per session, reused across shots
   const failed = [];
   const counts = { new: 0, changed: 0 }; // tells the guide writer which images to re-insert
@@ -667,11 +697,11 @@ async function capture(page, s) {
       if (s.freshSession && pages[key]) { await pages[key].browserContext().close(); delete pages[key]; }
       pages[key] ||= await newSession(browser, s.session);
       const page = pages[key];
-      if (s.viewport) await page.setViewport({ ...VIEWPORT, ...s.viewport });
+      const viewSet = await setView(page, s);
       if (s.video && !CHECK) {
         const file = await record(page, s);
         console.log(T.ok, path.relative(process.cwd(), file), `(${T.video})`);
-        if (s.viewport) await page.setViewport(VIEWPORT);
+        if (viewSet) await resetView(page);
         continue;
       }
       if (s.url) await page.goto(absUrl(s.url), { waitUntil: 'networkidle2' });
@@ -686,7 +716,7 @@ async function capture(page, s) {
         const prev = state === 'changed' ? keepPrevious(s, old) : null;
         console.log(T.ok, path.relative(process.cwd(), file), `(${T.state[state]}${prev ? T.before(path.relative(process.cwd(), prev)) : ''})`);
       }
-      if (s.viewport) await page.setViewport(VIEWPORT);
+      if (viewSet) await resetView(page);
     } catch (e) {
       failed.push(s.name);
       console.log(T.fail, s.name, '-', e.message.split('\n')[0]);

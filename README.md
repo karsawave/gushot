@@ -124,6 +124,7 @@ What you will use most:
 | `element` | captures only one element, such as a modal or a form; add `"padding": 16` to keep some of the page around it |
 | `fullPage` | captures the whole scrolling page |
 | `viewport` | uses another size for this shot, e.g. `{ "width": 390, "height": 844 }` for a phone |
+| `device` | emulates a phone or tablet, e.g. `"iPhone 13"`: size, user agent, and touch, so the site shows its real mobile layout |
 | `video` | records the shot's steps as `"gif"`, `"mp4"`, or `"webm"` instead of a PNG (needs ffmpeg) |
 
 | Step | Example |

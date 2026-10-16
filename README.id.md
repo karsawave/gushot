@@ -124,6 +124,7 @@ Yang paling sering dipakai:
 | `element` | memotret satu elemen saja, misalnya modal atau form; tambahkan `"padding": 16` supaya sebagian halaman di sekitarnya ikut terlihat |
 | `fullPage` | memotret seluruh halaman sampai bawah |
 | `viewport` | ukuran layar khusus shot ini, misalnya `{ "width": 390, "height": 844 }` untuk HP |
+| `device` | meniru HP atau tablet, misalnya `"iPhone 13"`: ukuran, user agent, dan sentuhan, jadi situs menampilkan tampilan HP yang sebenarnya |
 | `video` | merekam langkah shot sebagai `"gif"`, `"mp4"`, atau `"webm"`, bukan PNG (butuh ffmpeg) |
 
 | Langkah | Contoh |

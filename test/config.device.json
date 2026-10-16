@@ -1,0 +1,12 @@
+{
+  "out": "output",
+  "shots": [
+    { "name": "d01_phone", "url": "./page.html", "device": "iPhone 13", "steps": [
+      { "js": "if (screen.width !== 390 || !/iPhone/.test(navigator.userAgent) || navigator.maxTouchPoints === 0) throw new Error('not emulated: ' + screen.width)" }
+    ] },
+    { "name": "d02_desktop_again", "url": "./page.html", "steps": [
+      { "js": "if (innerWidth !== 1280 || /iPhone/.test(navigator.userAgent)) throw new Error('device not reset: ' + innerWidth)" }
+    ] },
+    { "name": "d03_unknown", "url": "./page.html", "device": "iPhone 99" }
+  ]
+}

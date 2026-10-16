@@ -209,6 +209,11 @@ const cases = [
       && r.out.includes('guide.md:11: x01_login alt text "Login" differs from its caption "Login page"')
       && r.out.includes('shots not used in the guide (info): x02_text_still_replaced') && !r.out.includes('example.com') || r.out;
   }],
+  ['device: phone emulation, reset after the shot, unknown name suggests close ones', () => {
+    const r = shot('config.device.json', '--check');
+    return r.status === 1 && r.out.includes('d01_phone (checked') && r.out.includes('d02_desktop_again (checked')
+      && /unknown device "iPhone 99", did you mean: iPhone 15/.test(r.out) || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

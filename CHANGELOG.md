@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- New shot and root key `device` (alias `perangkat`): emulates a phone or tablet from puppeteer's list (`"iPhone 13"`, `"Pixel 7"`), with its size, user agent, and touch, so sites that change layout or menus on mobile are captured as users see them. An unknown name suggests close ones.
 - New `--guide <file.md>`: checks a Markdown guide against the config. Images the guide uses that no shot makes, and captions in the guide that differ from `caption`, print a `GUIDE` line and make the exit code 1, so the check can run in CI. Shots the guide does not use are listed as info.
 - Docs: how to show the guide's `version` on the cover with Pandoc, VitePress, MkDocs, or a custom builder (tutorial 7), and how to update an installed copy of the skill (README, tutorial 5).
 
