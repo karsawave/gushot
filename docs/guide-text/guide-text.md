@@ -59,6 +59,20 @@ The skeleton is overwritten on every run. Copy from it into your real guide and 
 |---|---|
 | ![](screenshots/01_orders.png) | ![](screenshots/02_order_form.png) |
 
+## Numbering the figures
+
+Write the caption without a number and let GuShot count:
+
+```json
+"captionNumber": "Figure {chapter}.{n}",
+"shots": [
+  { "name": "01_orders", "chapter": 2, "caption": "The Recent orders page" },
+  { "name": "02_order_form", "caption": "Filling in a new order", "skipNumbers": 1 }
+]
+```
+
+This gives "Figure 2.1 The Recent orders page" and "Figure 2.3 Filling in a new order". Number 2.2 is left for a diagram written in the guide. When a shot is added in the middle, the numbers after it move up by themselves; run `--guide` to find the captions in the guide that still have the old number.
+
 ## Showing the version on the cover
 
 Copy the skeleton's front matter to the very top of your guide (nothing may come before the first `---`). Most Markdown tools read it:

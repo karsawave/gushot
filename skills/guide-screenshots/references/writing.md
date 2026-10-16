@@ -30,6 +30,7 @@ Name the kind before writing; each has its own pattern.
 - Add a flow diagram (for example Mermaid) only where text and screenshots cannot show it well: a procedure that branches (a Yes/No decision, a loop back to fix errors), the order in which records must be created, or how records refer to each other. A straight sequence of steps stays a numbered list.
 - Follow the project's style file: if it asks for diagrams, write them; if it forbids them, do not.
 - Check that the project's PDF or site builder renders the diagram. If it does not (raw code would show in the PDF), use a numbered list or a table instead.
+- Let GuShot number the figures: `captionNumber` in the config, `chapter` on the first shot of each chapter, and `skipNumbers: 1` on the shot after a diagram, so the diagram keeps its number. Do not type numbers into `caption`.
 - Number and caption a diagram like an image ("Figure 6.1 ...") and mention it in the text before it, so the reader knows why it is there.
 - Keep it small: one diagram per idea, labels taken from the screen (same button and menu names as the text).
 

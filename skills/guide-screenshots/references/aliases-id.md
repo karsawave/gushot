@@ -8,6 +8,9 @@ Kunci utama berbahasa Inggris. Kunci bahasa Indonesia di bawah tetap diterima da
 |---|---|---|
 | `panduan`: `versi`, `tanggal`, `versiAplikasi` | `guide`: `version`, `date`, `appVersion` | versi dokumen panduan |
 | `awal` | `init` | kode pembantu untuk langkah `js`, dijalankan di setiap halaman |
+| `nomorGambar` | `captionNumber` | pola nomor gambar, mis. `"Gambar {chapter}.{n}"` |
+| `bab` | `chapter` | bab untuk `{chapter}`, berlaku sampai bab berikutnya |
+| `lewatiNomor` | `skipNumbers` | kosongkan nomor untuk gambar non-GuShot (diagram) |
 | `perangkat` | `device` | tiru HP atau tablet (ukuran, user agent, sentuhan) |
 | `bekukanWaktu` | `freezeTime` | jam halaman mulai dari waktu ini |
 | `bahasa` | `lang` | bahasa pesan terminal |

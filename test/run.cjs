@@ -214,6 +214,13 @@ const cases = [
     return r.status === 1 && r.out.includes('d01_phone (checked') && r.out.includes('d02_desktop_again (checked')
       && /unknown device "iPhone 99", did you mean: iPhone 15/.test(r.out) || r.out;
   }],
+  ['captionNumber: chapters, skipNumbers, and --guide catches an old number', () => {
+    const r = shot('config.number.json', '--check', '--md', 'output/number.md', '--guide', 'guide-number.md');
+    const md = fs.readFileSync(path.join(__dirname, 'output', 'number.md'), 'utf8');
+    const lines = md.split('\n').filter((l) => l.startsWith('*')).join('|');
+    return r.status === 1 && lines === '*Gambar 6.1 Contoh halaman daftar*|*Gambar 6.2 Formulir Add Status*|*Gambar 6.4 Formulir Supplier*|*Gambar 7.1 Halaman detail*'
+      && r.out.includes('n03_supplier alt text "Gambar 6.3 Formulir Supplier" differs from its caption "Gambar 6.4 Formulir Supplier"') || r.out + md;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

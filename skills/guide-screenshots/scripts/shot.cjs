@@ -112,9 +112,9 @@ let T = MSG[(ENV_LANG || 'en').slice(0, 2)] || MSG.en;
 // ---------- Indonesian key aliases ----------
 const ALIAS = {
   root: { ingatLogin: 'keepLogin', skala: 'scale', keluar: 'out', blurSelalu: 'alwaysBlur', kekuatanBlur: 'blurStrength', warnaSorot: 'highlightColor',
-    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide', perangkat: 'device' },
+    jeda: 'delay', tema: 'theme', sesi: 'sessions', bahasa: 'lang', gantiTeks: 'replaceText', bekukanWaktu: 'freezeTime', awal: 'init', panduan: 'guide', perangkat: 'device', nomorGambar: 'captionNumber' },
   shot: { nama: 'name', sesi: 'session', langkah: 'steps', elemen: 'element', penuh: 'fullPage',
-    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText', perangkat: 'device' },
+    sembunyikan: 'hide', jarak: 'padding', sorot: 'highlight', sesiBaru: 'freshSession', jeda: 'delay', keterangan: 'caption', gantiTeks: 'replaceText', perangkat: 'device', bab: 'chapter', lewatiNomor: 'skipNumbers' },
   step: { buka: 'open', ketik: 'type', teks: 'text', klik: 'click', klikTeks: 'clickText', di: 'within',
     pilih: 'select', nilai: 'value', tekan: 'press', tunggu: 'wait', tungguTeks: 'waitText', batas: 'timeout',
     gulirKe: 'scrollTo', perintah: 'run', isi: 'fill' },
@@ -128,8 +128,8 @@ const alias = (o, map) => (o && typeof o === 'object' && !Array.isArray(o)
 // Known keys (after aliasing). Anything else is most likely a typo: warn once, don't fail.
 // Keys starting with "_" or "$" are free for comments / $schema.
 const KEYS = {
-  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device sessions shots',
-  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText device',
+  root: 'base keepLogin ffmpeg scale out viewport theme alwaysBlur blurStrength highlightColor css delay headless chrome lang replaceText freezeTime init guide device captionNumber sessions shots',
+  shot: 'name session url steps video element padding fullPage blur hide highlight viewport freshSession delay caption replaceText device chapter skipNumbers',
   step: 'open type text click clickText within select value fill cookie press wait waitText timeout scrollTo js run cwd otp',
   otp: 'file pattern into submit tries',
   highlight: 'selector label note text',
@@ -182,6 +182,19 @@ cfg.shots = (cfg.shots || []).map((s) => {
   return r;
 });
 for (const n of Object.keys(cfg.sessions || {})) cfg.sessions[n] = cfg.sessions[n].map(step);
+// captionNumber "Gambar {chapter}.{n}": numbers the captions in config order, over all shots (not only
+// filtered ones), so a shot keeps its number when run alone. `chapter` carries over to the next shots
+// and restarts {n}; `skipNumbers` leaves room for figures GuShot does not make (diagrams).
+if (cfg.captionNumber) {
+  let chapter = '', n = 0;
+  for (const s of cfg.shots) {
+    if (s.chapter !== undefined && String(s.chapter) !== chapter) { chapter = String(s.chapter); n = 0; }
+    n += s.skipNumbers || 0;
+    if (!s.caption || s.video) continue;
+    n++;
+    s.caption = `${cfg.captionNumber.replace('{chapter}', chapter).replace('{n}', n)} ${s.caption}`;
+  }
+}
 
 const BASE = (cfg.base || '').replace(/\/$/, '');
 const OUT = path.resolve(configDir, cfg.out || 'output');

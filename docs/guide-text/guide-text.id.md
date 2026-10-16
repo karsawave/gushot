@@ -59,6 +59,20 @@ Kerangka ini ditimpa setiap kali dijalankan. Salin isinya ke panduan yang sebena
 |---|---|
 | ![](screenshots/01_orders.png) | ![](screenshots/02_order_form.png) |
 
+## Menomori gambar
+
+Tulis keterangan tanpa nomor, biar GuShot yang menghitung:
+
+```json
+"captionNumber": "Gambar {chapter}.{n}",
+"shots": [
+  { "name": "01_orders", "chapter": 2, "caption": "Halaman Recent orders" },
+  { "name": "02_order_form", "caption": "Mengisi pesanan baru", "skipNumbers": 1 }
+]
+```
+
+Hasilnya "Gambar 2.1 Halaman Recent orders" dan "Gambar 2.3 Mengisi pesanan baru". Nomor 2.2 disisakan untuk diagram yang ditulis di panduan. Kalau ada shot baru di tengah, nomor setelahnya ikut bergeser sendiri; jalankan `--guide` untuk menemukan keterangan di panduan yang masih memakai nomor lama.
+
 ## Menampilkan versi di sampul
 
 Salin front matter dari kerangka ke bagian paling atas panduan (tidak boleh ada apa pun sebelum `---` pertama). Sebagian besar alat Markdown bisa membacanya:

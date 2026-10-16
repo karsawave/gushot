@@ -1,0 +1,11 @@
+{
+  "out": "output",
+  "captionNumber": "Gambar {chapter}.{n}",
+  "shots": [
+    { "name": "n01_list", "url": "./page.html", "chapter": 6, "caption": "Contoh halaman daftar" },
+    { "name": "n02_form", "caption": "Formulir Add Status" },
+    { "name": "n03_supplier", "caption": "Formulir Supplier", "skipNumbers": 1 },
+    { "name": "n04_no_caption" },
+    { "name": "n05_detail", "chapter": 7, "caption": "Halaman detail" }
+  ]
+}
