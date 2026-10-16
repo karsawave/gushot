@@ -51,6 +51,7 @@ Run with `--md guide-skeleton.md` to get, per shot: its name as heading, image, 
 
 ## Check before you finish
 
+- Run `--check --guide <guide.md>`: it lists images the guide uses that no shot makes, and captions in the guide that differ from `caption` in the config. Fix every `GUIDE` line.
 - Open every image reported `new` or `changed`, not a sample: markers on the right control, numbers match the text, blur and `replaceText` applied, nothing cut off.
 - Each step in the text that points at something on screen has a marker in its image.
 

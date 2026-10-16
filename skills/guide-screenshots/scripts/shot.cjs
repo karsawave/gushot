@@ -2,10 +2,11 @@
 /**
  * GuShot (Guide User Shot): capture web app user-guide screenshots from a single JSON config.
  *
- *   node shot.cjs <config.json> [filter...] [--check] [--md <file>]
+ *   node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>]
  *   filter  = only shots whose name contains that text
  *   --check = run every step but save no images (catch broken selectors)
  *   --md    = also write a Markdown guide skeleton (caption, image, numbered notes per shot)
+ *   --guide = check a Markdown guide against the config (images without a shot, captions that differ)
  *
  * Config format: see ../assets/config.example.json and ../references/REFERENCE.md.
  * Config keys are English; the Indonesian keys from v1 are accepted as aliases.
@@ -31,7 +32,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- messages (en primary, id secondary) ----------
 const MSG = {
   en: {
-    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>]',
+    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>]',
     envMissing: (k) => `Environment variable ${k} is not set`,
     noChrome: 'Chrome/Edge not found, set "chrome" in the config or the CHROME_PATH env',
     textNotFound: (t) => `text "${t}" not found`,
@@ -54,6 +55,10 @@ const MSG = {
     mdWritten: (f) => `Guide skeleton: ${f}`,
     before: (f) => `, before: ${f}`,
     guideNoVersion: '"guide" needs a "version", e.g. { "version": "1.0" }',
+    guideNoShot: (w, src) => `${w}: ${src} is used by the guide but no shot makes it`,
+    guideAlt: (w, n, a, c) => `${w}: ${n} alt text "${a}" differs from its caption "${c}"`,
+    guideItalic: (w, n, a, c) => `${w}: ${n} caption line "${a}" differs from its caption "${c}"`,
+    guideUnused: (l) => `shots not used in the guide (info): ${l.join(', ')}`,
     guideNotRaised: (v) => `Images changed since version ${v}; raise guide.version in the config`,
     revisionRow: (v, d, what) => `Revision row: | ${v} | ${d} | ${what} | (reason) |`,
     orphans: (out, l) => `Images in ${out} that no shot makes (renamed or removed?): ${l.join(', ')}`,
@@ -63,7 +68,7 @@ const MSG = {
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
   },
   id: {
-    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>]',
+    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>] [--guide <file>]',
     envMissing: (k) => `Environment ${k} belum diisi`,
     noChrome: 'Chrome/Edge tidak ditemukan, isi "chrome" di konfigurasi atau env CHROME_PATH',
     textNotFound: (t) => `teks "${t}" tidak ditemukan`,
@@ -86,6 +91,10 @@ const MSG = {
     mdWritten: (f) => `Kerangka panduan: ${f}`,
     before: (f) => `, sebelumnya: ${f}`,
     guideNoVersion: '"guide" butuh "version", contoh: { "version": "1.0" }',
+    guideNoShot: (w, src) => `${w}: ${src} dipakai panduan tapi tidak dibuat shot mana pun`,
+    guideAlt: (w, n, a, c) => `${w}: teks alt ${n} "${a}" beda dengan caption "${c}"`,
+    guideItalic: (w, n, a, c) => `${w}: baris keterangan ${n} "${a}" beda dengan caption "${c}"`,
+    guideUnused: (l) => `shot yang tidak dipakai panduan (info): ${l.join(', ')}`,
     guideNotRaised: (v) => `Gambar berubah sejak versi ${v}; naikkan guide.version di config`,
     revisionRow: (v, d, what) => `Baris revisi: | ${v} | ${d} | ${what} | (alasan) |`,
     orphans: (out, l) => `Gambar di ${out} yang tidak dibuat shot mana pun (ganti nama atau dihapus?): ${l.join(', ')}`,
@@ -145,6 +154,9 @@ const args = process.argv.slice(2);
 const CHECK = args.includes('--check');
 const mdAt = args.indexOf('--md');
 const MD = mdAt < 0 ? null : path.resolve(args.splice(mdAt, 2)[1] || 'guide.md');
+const guideAt = args.indexOf('--guide');
+const GUIDE = guideAt < 0 ? null : args.splice(guideAt, 2)[1];
+if (guideAt >= 0 && !GUIDE) { console.error(T.usage); process.exit(1); }
 const [configFile, ...filters] = args.filter((a) => a !== '--check');
 if (!configFile) { console.error(T.usage); process.exit(1); }
 const configDir = path.dirname(path.resolve(configFile));
@@ -429,6 +441,34 @@ function gushotDir(sub = '') {
   fs.writeFileSync(path.join(dir, '.gitignore'), '*\n');
   return path.join(dir, sub);
 }
+// --guide <file.md>: the guide's images in the output folder must come from a shot, and a shot's
+// caption must match the image's alt text and the italic line under it. Returns the number of problems.
+function checkGuide(file) {
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const byFile = new Map(cfg.shots.map((s) => [path.resolve(outFile(s)), s]));
+  const used = new Set();
+  let problems = 0;
+  const say = (msg, isProblem = true) => { console.log(`GUIDE ${msg}`); if (isProblem) problems++; };
+  lines.forEach((line, i) => {
+    for (const [, alt, src] of line.matchAll(/!\[([^\]]*)\]\(<?([^)\s>]+)>?[^)]*\)/g)) {
+      const img = path.resolve(path.dirname(file), decodeURI(src));
+      if (path.relative(OUT, img).startsWith('..') || !img.endsWith('.png')) continue; // not one of ours
+      const where = `${path.basename(file)}:${i + 1}`;
+      const s = byFile.get(img);
+      if (!s) { say(T.guideNoShot(where, src)); continue; }
+      used.add(s.name);
+      if (!s.caption) continue;
+      if (alt !== s.caption) say(T.guideAlt(where, s.name, alt, s.caption));
+      const next = lines.slice(i + 1).find((l) => l.trim());
+      const italic = next?.trim().match(/^\*([^*].*)\*$/)?.[1];
+      if (italic !== undefined && italic !== s.caption) say(T.guideItalic(where, s.name, italic, s.caption));
+    }
+  });
+  const unused = cfg.shots.filter((s) => !s.video && !used.has(s.name)).map((s) => s.name);
+  if (unused.length) say(T.guideUnused(unused), false);
+  return problems;
+}
+
 // The image a `changed` shot replaced goes to .gushot/prev/, so the change can be compared.
 function keepPrevious(s, old) {
   const f = path.join(gushotDir('prev'), path.basename(outFile(s)));
@@ -690,7 +730,8 @@ async function capture(page, s) {
     fs.writeFileSync(MD, `${[...head, run, ...row, ...md].join('\n\n')}\n`);
     console.log(T.mdWritten(path.relative(process.cwd(), MD)));
   }
+  const guideProblems = GUIDE ? checkGuide(path.resolve(GUIDE)) : 0;
   console.log(T.done(shots.length - failed.length, failed.length, OUT));
   if (!CHECK) console.log(T.changes(counts.changed, counts.new));
-  process.exit(failed.length ? 1 : 0);
+  process.exit(failed.length || guideProblems ? 1 : 0);
 })().catch((e) => { console.error(e.message); process.exit(1); });

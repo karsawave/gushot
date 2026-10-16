@@ -151,6 +151,7 @@ node <path-to>/shot.cjs my-guide.json             # every shot
 node <path-to>/shot.cjs my-guide.json 03 login    # only shots whose name contains "03" or "login"
 node <path-to>/shot.cjs my-guide.json --check     # run the steps, save nothing
 node <path-to>/shot.cjs my-guide.json --md guide-skeleton.md   # also write a Markdown skeleton
+node <path-to>/shot.cjs my-guide.json --check --guide guide.md # check the guide's images and captions against the config
 ```
 
 - Each shot prints `OK <file>` or `FAIL <name> - <reason>`. A failed shot does not stop the rest.

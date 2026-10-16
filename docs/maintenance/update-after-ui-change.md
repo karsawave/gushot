@@ -83,13 +83,13 @@ If the shots carry a `caption` and step `text` ([tutorial 7](../guide-text/guide
 
 ## Catch breakage in CI
 
-Run `--check` on every push, so a renamed button fails the build instead of silently breaking the guide later. A GitHub Actions job, assuming your app can start in CI with sample data:
+Run `--check` on every push, so a renamed button fails the build instead of silently breaking the guide later. `--guide docs/guide.md` also fails it when the guide uses an image no shot makes, or a caption in the guide no longer matches the config. A GitHub Actions job, assuming your app can start in CI with sample data:
 
 ```yaml
 - run: npm ci && npm run seed && npm start &
 - run: npx wait-on http://localhost:3000
 - run: npm install --omit=dev --prefix path/to/guide-screenshots/scripts
-- run: node path/to/guide-screenshots/scripts/shot.cjs docs/screenshots.json --check
+- run: node path/to/guide-screenshots/scripts/shot.cjs docs/screenshots.json --check --guide docs/guide.md
   env:
     APP_PASSWORD: ${{ secrets.DOCS_DEMO_PASSWORD }}
 ```

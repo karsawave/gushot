@@ -153,6 +153,7 @@ node <path>/shot.cjs panduan.json             # semua shot
 node <path>/shot.cjs panduan.json 03 login    # hanya shot yang namanya mengandung "03" atau "login"
 node <path>/shot.cjs panduan.json --check     # jalankan langkah, tanpa menyimpan gambar
 node <path>/shot.cjs panduan.json --md kerangka.md   # sekaligus menulis kerangka Markdown
+node <path>/shot.cjs panduan.json --check --guide panduan.md   # cek gambar dan keterangan panduan terhadap config
 ```
 
 - Setiap shot mencetak `OK <file>` atau `FAIL <nama> - <alasan>`. Shot yang gagal tidak menghentikan yang lain.

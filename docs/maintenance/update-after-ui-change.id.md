@@ -83,13 +83,13 @@ Kalau shot memakai `caption` dan `text` langkah ([tutorial 7](../guide-text/guid
 
 ## Tangkap kerusakan di CI
 
-Jalankan `--check` setiap push, supaya tombol yang namanya berubah membuat build gagal, bukan diam-diam merusak panduan. Contoh job GitHub Actions, dengan asumsi aplikasi Anda bisa dijalankan di CI dengan data contoh:
+Jalankan `--check` setiap push, supaya tombol yang namanya berubah membuat build gagal, bukan diam-diam merusak panduan. Contoh job GitHub Actions, dengan asumsi aplikasi Anda bisa dijalankan di CI dengan data contoh: `--guide docs/guide.md` juga membuat build gagal kalau panduan memakai gambar yang tidak dibuat shot mana pun, atau keterangan di panduan tidak lagi sama dengan config.
 
 ```yaml
 - run: npm ci && npm run seed && npm start &
 - run: npx wait-on http://localhost:3000
 - run: npm install --omit=dev --prefix path/to/guide-screenshots/scripts
-- run: node path/to/guide-screenshots/scripts/shot.cjs docs/screenshots.json --check
+- run: node path/to/guide-screenshots/scripts/shot.cjs docs/screenshots.json --check --guide docs/guide.md
   env:
     APP_PASSWORD: ${{ secrets.DOCS_DEMO_PASSWORD }}
 ```
