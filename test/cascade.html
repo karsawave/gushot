@@ -1,7 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Cascade test</title>
-<!-- Mimics the ITSM asset form, where `fill` first went wrong on a real app:
+<!-- Mimics a real asset management form, where `fill` first went wrong on a real app:
      - Code -> Category -> Model are chained dropdowns reloaded over AJAX (served by test/run.cjs, 400 ms late).
      - Category starts with the full list; choosing a Code rebuilds it, and resets it when the Code maps
        to several categories. Filling Category before that reload finishes loses the choice.
