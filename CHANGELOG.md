@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Docs: a fill-in first prompt for new users (README, "Using it with an AI agent"; tutorial 5, "Your first guide").
+
 ## 1.8.0 (2026-10-16)
 
 - Any step takes `frame` (alias `bingkai`), an iframe selector, to run inside that iframe, also one from another domain: fill an embedded payment form, click in an embedded editor.

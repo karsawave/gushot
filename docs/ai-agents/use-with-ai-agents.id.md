@@ -63,6 +63,28 @@ gemini skills install https://github.com/rombyar/gushot.git --path skills/guide-
 
 Salinan yang terpasang tetap di versinya sampai Anda memperbaruinya: lihat [Memperbarui](../../README.id.md#memperbarui) di README.
 
+## Juklak pertama Anda
+
+Bingung mau minta apa? Salin ini, sesuaikan isinya dengan aplikasi Anda, lalu kirim:
+
+```
+Pakai guide-screenshots untuk membuat buku panduan aplikasi saya.
+
+- URL aplikasi: http://localhost:3000
+- Login: user admin@example.com, password di env var APP_PASSWORD
+- Pembaca: staf yang memakai aplikasi setiap hari
+- Tugas yang dibahas: login, <tugas 1>, <tugas 2>
+- Hasil: gambar di docs/panduan/screenshots, teks di docs/panduan.md
+- Nama file dan teks dalam bahasa Indonesia.
+- Blur data pribadi (nama, nomor telepon, email).
+
+Lihat aplikasinya dulu dan tunjukkan daftar screenshot sebelum mulai mengambil.
+```
+
+- Ganti bagian `<...>` dengan tugas nyata, misalnya "tambah pelanggan" atau "cetak faktur".
+- Jangan tulis password asli di prompt. Isi env var sebelum menjalankan agen (`APP_PASSWORD=...`, atau `$env:APP_PASSWORD='...'` di PowerShell).
+- Agen menjawab dengan daftar screenshot. Perbaiki bila perlu, lalu bilang "lanjut". Agen mengambil gambar, mengeceknya, dan menulis teksnya.
+
 ## Contoh permintaan
 
 Buka proyek aplikasi Anda di agen, lalu minta:

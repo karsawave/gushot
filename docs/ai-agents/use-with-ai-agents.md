@@ -63,6 +63,27 @@ The [main README](../../README.md#using-it-with-an-ai-agent) lists the folder ea
 
 An installed copy keeps its version until you update it: see [Updating](../../README.md#updating) in the README.
 
+## Your first guide
+
+Not sure what to ask? Copy this, change the lines to fit your app, and send it:
+
+```
+Use guide-screenshots to make a user guide for my app.
+
+- App URL: http://localhost:3000
+- Login: user admin@example.com, password in the env var APP_PASSWORD
+- Readers: staff who use the app every day
+- Tasks to cover: log in, <task 1>, <task 2>
+- Output: images in docs/guide/screenshots, text in docs/guide.md
+- Blur personal data (names, phone numbers, emails).
+
+Look at the app first and show me the list of shots before you capture.
+```
+
+- Replace the `<...>` parts with real tasks, such as "add a customer" or "print an invoice".
+- Do not put the real password in the prompt. Set it in the env var before you start the agent (`APP_PASSWORD=...`, or `$env:APP_PASSWORD='...'` in PowerShell).
+- The agent answers with a shot list. Fix it if needed, then say "go". It captures, checks the images, and writes the text.
+
 ## Example requests
 
 Open your app's project in the agent and ask:

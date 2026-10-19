@@ -171,6 +171,45 @@ node <path-to>/shot.cjs my-guide.json --check --guide guide.md # check the guide
 
 GuShot is also an [Agent Skill](https://agentskills.io). Once installed, you ask the agent in plain words ("make screenshots of the login page and the dashboard for the user guide"). It reads your app's code to work out the login flow, writes the config, runs it, and checks the images. When it also writes the guide text, it follows [writing.md](skills/guide-screenshots/references/writing.md) and your project's own style file, if you have one.
 
+For a first guide, copy this prompt, fill in the `[...]` parts, and send it to the agent. Delete any line that does not apply.
+
+```
+Use GuShot (the guide-screenshots skill) to make a user guide for [APP NAME].
+
+- App URL: [URL, e.g. http://localhost:3000]
+- Login: user [USERNAME/EMAIL], password in the env var [ENV_NAME, e.g. APP_PASSWORD]
+- Readers: [WHO READS IT, e.g. warehouse admin staff]
+- Tasks to cover, in order:
+  1. [TASK 1, e.g. Log in]
+  2. [TASK 2]
+  3. [TASK 3]
+- Output: images in [FOLDER]/screenshots, text in [FOLDER].md
+- Blur personal data: [DATA, e.g. names, phone numbers, emails].
+
+Look at the app first and show me the list of shots before you capture.
+```
+
+Filled in, for an inventory app:
+
+```
+Use GuShot (the guide-screenshots skill) to make a user guide for StockPro.
+
+- App URL: http://localhost:8000
+- Login: user admin@stockpro.test, password in the env var APP_PASSWORD
+- Readers: warehouse staff who record incoming and outgoing goods
+- Tasks to cover, in order:
+  1. Log in
+  2. Add a new item
+  3. Record incoming goods
+  4. Print the monthly stock report
+- Output: images in docs/guide/screenshots, text in docs/guide.md
+- Blur personal data: supplier names, phone numbers, emails.
+
+Look at the app first and show me the list of shots before you capture.
+```
+
+Do not put the real password in the prompt: set the env var before you start the agent (`APP_PASSWORD=...`, or `$env:APP_PASSWORD='...'` in PowerShell).
+
 The agent has to run commands on the same machine as your app, or one that can reach it. Agents that run in a cloud sandbox, such as a chat in the browser, cannot open your `localhost` and have no Chrome.
 
 ### Claude Code

@@ -173,6 +173,47 @@ node <path>/shot.cjs panduan.json --check --guide panduan.md   # cek gambar dan 
 
 GuShot juga sebuah [Agent Skill](https://agentskills.io). Setelah dipasang, cukup minta ke agen dengan bahasa biasa ("buatkan screenshot halaman login dan dasbor untuk buku panduan"). Agen akan membaca kode aplikasi Anda untuk memahami alur login, menulis config, menjalankannya, lalu memeriksa gambarnya. Kalau agen juga menulis teks panduannya, agen mengikuti [writing.md](skills/guide-screenshots/references/writing.md) dan file gaya milik proyek Anda, kalau ada.
 
+Untuk juklak pertama, salin prompt ini, isi bagian `[...]`, lalu kirim ke agen. Hapus baris yang tidak perlu.
+
+```
+Pakai GuShot (skill guide-screenshots) untuk membuat buku panduan aplikasi [NAMA APLIKASI].
+
+- URL aplikasi: [URL, misal http://localhost:3000]
+- Login: user [USERNAME/EMAIL], password di env var [NAMA_ENV, misal APP_PASSWORD]
+- Pembaca: [SIAPA PEMBACANYA, misal staf admin gudang]
+- Tugas yang dibahas, urut:
+  1. [TUGAS 1, misal Login]
+  2. [TUGAS 2]
+  3. [TUGAS 3]
+- Hasil: gambar di [FOLDER]/screenshots, teks di [FOLDER].md
+- Nama file dan teks dalam bahasa Indonesia.
+- Blur data pribadi: [DATA, misal nama, nomor telepon, email].
+
+Lihat aplikasinya dulu dan tunjukkan daftar screenshot sebelum mulai mengambil.
+```
+
+Contoh isian, untuk aplikasi stok barang:
+
+```
+Pakai GuShot (skill guide-screenshots) untuk membuat buku panduan aplikasi StockPro.
+
+- URL aplikasi: http://localhost:8000
+- Login: user admin@stockpro.test, password di env var APP_PASSWORD
+- Pembaca: staf gudang yang mencatat barang masuk dan keluar
+- Tugas yang dibahas, urut:
+  1. Login
+  2. Tambah barang baru
+  3. Catat barang masuk
+  4. Cetak laporan stok bulanan
+- Hasil: gambar di docs/panduan/screenshots, teks di docs/panduan.md
+- Nama file dan teks dalam bahasa Indonesia.
+- Blur data pribadi: nama pemasok, nomor telepon, email.
+
+Lihat aplikasinya dulu dan tunjukkan daftar screenshot sebelum mulai mengambil.
+```
+
+Jangan tulis password asli di prompt: isi env var sebelum menjalankan agen (`APP_PASSWORD=...`, atau `$env:APP_PASSWORD='...'` di PowerShell).
+
 Agennya harus bisa menjalankan perintah di komputer yang sama dengan aplikasi Anda, atau yang bisa mengaksesnya. Agen yang berjalan di sandbox cloud, misalnya chat di browser, tidak bisa membuka `localhost` Anda dan tidak punya Chrome.
 
 ### Claude Code
