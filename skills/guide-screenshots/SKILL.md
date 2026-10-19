@@ -4,7 +4,7 @@ description: Capture screenshots for web app user guides, tutorials, manuals, an
 license: MIT
 compatibility: Requires Node.js 18+, npm, a local Chrome or Edge, and shell access to run commands. Works with any agent that supports Agent Skills.
 metadata:
-  version: "1.8.0"
+  version: "1.9.0"
 ---
 
 # Guide screenshots
@@ -55,7 +55,7 @@ Steps: `open`, `type`+`text`, `fill` ({ label text: value }, finds fields by the
    Add `--check` to run the steps without saving images, e.g. to find selectors broken by a UI change. Add `--md <file>` to also write a Markdown skeleton (caption, image, numbered notes per shot) to copy into the guide.
    Passwords come from env (`{{APP_PASSWORD}}` in the config), never written in the JSON.
 7. **Check the output.** Every shot prints `OK <file> (new|changed|unchanged)` or `FAIL <name> - <reason>`; only `new`/`changed` images need updating in the guide; exit code 1 means at least one failed. For `FAIL`, fix the selector/step and rerun only that shot. A `changed` line names the replaced image (`before: .gushot/prev/<name>.png`); compare the two to write the revision reason. A line listing images that no shot makes means leftovers from renamed or removed shots: check the guide does not still use them. If you can view images, open every `new`/`changed` PNG to confirm CSS loaded, the session is logged in, and blur applied. If you cannot view images, check that file sizes are not suspiciously small and ask the user to glance at one.
-8. **Insert into the guide** (Markdown/HTML), raise `guide.version` in the config, copy the skeleton's front matter, and add a revision row, then run once more with `--check --guide <guide.md>` and fix every `GUIDE` line (see `references/writing.md`), and rebuild the PDF if the project has a builder for it.
+8. **Insert into the guide** (Markdown/HTML), raise `guide.version` in the config, copy the skeleton's front matter, and add a revision row, then run once more with `--check --guide <guide.md>` and fix every `GUIDE` line (see `references/writing.md`), and rebuild the PDF with the project's builder; without one, write the guide as HTML with its table of contents in `.toc` and run `--pdf <guide.html>` (page numbers in the contents).
 
 ## Common problems
 

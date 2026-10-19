@@ -58,4 +58,4 @@ Run with `--md guide-skeleton.md` to get, per shot: its name as heading, image, 
 
 ## PDF
 
-GuShot does not build PDFs. Use the project's own builder, or Pandoc (`pandoc guide.md -o guide.pdf`), or print the rendered Markdown from the browser.
+Use the project's own builder if it has one. Otherwise write the guide as HTML (or convert it: `pandoc guide.md -s --toc -o guide.html`) and run `node scripts/shot.cjs --pdf guide.html guide.pdf`. Put the table of contents in an element with class `toc` (Pandoc's `#TOC` works too) whose links point to `#heading-id`: GuShot fills in each entry's page number (Chrome cannot do that from CSS). Fix every `TOC` line it prints. Without `@page` CSS the PDF is A4 with a page-number footer; for a cover without a footer or your own footer text, add `@page` rules.

@@ -9,6 +9,9 @@
  *   --guide = check a Markdown guide against the config (images without a shot, captions that differ)
  *   --login = log in by hand once in a visible browser and save it for keepLogin (SSO, captcha)
  *
+ *   node shot.cjs --pdf <guide.html> [out.pdf]
+ *   --pdf   = print an HTML guide to PDF, with page numbers in its table of contents (links in .toc)
+ *
  * Config format: see ../assets/config.example.json and ../references/REFERENCE.md.
  * Config keys are English; the Indonesian keys from v1 are accepted as aliases.
  * {{NAME}} in the config is replaced from the environment (e.g. passwords), so
@@ -33,7 +36,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- messages (en primary, id secondary) ----------
 const MSG = {
   en: {
-    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>] [--login <session>]',
+    usage: 'Usage: node shot.cjs <config.json> [filter...] [--check] [--md <file>] [--guide <file>] [--login <session>]\n       node shot.cjs --pdf <guide.html> [out.pdf]',
     envMissing: (k) => `Environment variable ${k} is not set`,
     noChrome: 'Chrome/Edge not found, set "chrome" in the config or the CHROME_PATH env',
     textNotFound: (t) => `text "${t}" not found`,
@@ -72,10 +75,12 @@ const MSG = {
     badTime: (v) => `freezeTime "${v}" is not a date, use e.g. "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> GuShot run ${d}: ${[c.length && `changed: ${c.join(', ')}`, n.length && `new: ${n.join(', ')}`].filter(Boolean).join('; ') || 'no image changes'}`,
     mdRunCheck: (d) => `> GuShot run ${d} (--check, no images saved)`,
+    pdfDone: (f, pages, toc) => `PDF  ${f}: ${pages} pages, ${toc} table of contents entries numbered`,
+    tocMissing: (id) => `TOC  #${id}: no element with this id, page number left empty`,
     done: (ok, bad, out) => `\nDone: ${ok} OK, ${bad} failed. Output in ${out}`,
   },
   id: {
-    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>] [--guide <file>] [--login <session>]',
+    usage: 'Pemakaian: node shot.cjs <config.json> [saring...] [--check] [--md <file>] [--guide <file>] [--login <session>]\n           node shot.cjs --pdf <panduan.html> [hasil.pdf]',
     envMissing: (k) => `Environment ${k} belum diisi`,
     noChrome: 'Chrome/Edge tidak ditemukan, isi "chrome" di konfigurasi atau env CHROME_PATH',
     textNotFound: (t) => `teks "${t}" tidak ditemukan`,
@@ -114,6 +119,8 @@ const MSG = {
     badTime: (v) => `freezeTime "${v}" bukan tanggal, contoh: "2026-01-15T09:00:00"`,
     mdRun: (d, c, n) => `> Run GuShot ${d}: ${[c.length && `berubah: ${c.join(', ')}`, n.length && `baru: ${n.join(', ')}`].filter(Boolean).join('; ') || 'tidak ada gambar yang berubah'}`,
     mdRunCheck: (d) => `> Run GuShot ${d} (--check, tidak ada gambar yang disimpan)`,
+    pdfDone: (f, pages, toc) => `PDF  ${f}: ${pages} halaman, ${toc} entri daftar isi diberi nomor halaman`,
+    tocMissing: (id) => `TOC  #${id}: tidak ada elemen dengan id ini, nomor halaman dikosongkan`,
     done: (ok, bad, out) => `\nSelesai: ${ok} OK, ${bad} gagal. Hasil di ${out}`,
   },
 };
@@ -175,10 +182,14 @@ if (loginAt >= 0 && !LOGIN) { console.error(T.usage); process.exit(1); }
 const guideAt = args.indexOf('--guide');
 const GUIDE = guideAt < 0 ? null : args.splice(guideAt, 2)[1];
 if (guideAt >= 0 && !GUIDE) { console.error(T.usage); process.exit(1); }
-const [configFile, ...filters] = args.filter((a) => a !== '--check');
-if (!configFile) { console.error(T.usage); process.exit(1); }
-const configDir = path.dirname(path.resolve(configFile));
-const raw = fs.readFileSync(configFile, 'utf8').replace(/\{\{(\w+)\}\}/g, (_, k) => {
+// --pdf <guide.html> [out.pdf] needs no config.
+const pdfAt = args.indexOf('--pdf');
+const PDF = pdfAt < 0 ? null : args.splice(pdfAt, 3).slice(1);
+if (PDF && !PDF[0]) { console.error(T.usage); process.exit(1); }
+const [configFile, ...filters] = PDF ? [] : args.filter((a) => a !== '--check');
+if (!configFile && !PDF) { console.error(T.usage); process.exit(1); }
+const configDir = PDF ? process.cwd() : path.dirname(path.resolve(configFile));
+const raw = PDF ? '{}' : fs.readFileSync(configFile, 'utf8').replace(/\{\{(\w+)\}\}/g, (_, k) => {
   if (process.env[k] === undefined) throw new Error(T.envMissing(k));
   return JSON.stringify(process.env[k]).slice(1, -1);
 });
@@ -766,8 +777,68 @@ function writeSkeleton(md, list, changed, added) {
   console.log(T.mdWritten(path.relative(process.cwd(), md)));
 }
 
+// ---------- --pdf ----------
+// Chrome cannot put page numbers in a table of contents (no target-counter()), so the guide is printed
+// twice: the first PDF tells on which page each link target landed (Chrome writes in-page link targets
+// as named destinations), those numbers go into the .toc links, and the second print is the result.
+function pdfPages(buf) {
+  const s = buf.toString('latin1');
+  const obj = (n) => s.match(new RegExp(`(?:^|\\s)${n} 0 obj\\s*([^]*?)endobj`))?.[1] || '';
+  const order = []; // page objects in reading order (the page tree can be nested)
+  const walk = (n) => {
+    const o = obj(n);
+    if (!/\/Type \/Pages/.test(o)) { order.push(n); return; }
+    for (const [, k] of (o.match(/\/Kids \[([^\]]*)\]/)?.[1] || '').matchAll(/(\d+) 0 R/g)) walk(k);
+  };
+  walk(s.match(/\/Type \/Catalog[^]*?\/Pages (\d+) 0 R/)?.[1]);
+  const page = {};
+  const dests = s.match(/\/Dests (\d+) 0 R/)?.[1];
+  // "/bab-2 [8 0 R /XYZ ...]"; the name is the link's URL fragment (%C3%A4 for ä) with PDF #xx escapes on top
+  for (const [, name, ref] of dests ? obj(dests).matchAll(/\/([^\s[\]/<>()]+)\s*\[(\d+) 0 R/g) : []) {
+    const frag = name.replace(/#([0-9a-f]{2})/gi, (_, h) => String.fromCharCode(parseInt(h, 16)));
+    let id = frag;
+    try { id = decodeURIComponent(frag); } catch { /* a stray % in the id */ }
+    page[id] = order.indexOf(ref) + 1;
+  }
+  return { pages: order.length, page };
+}
+
+async function buildPdf(file, out = file.replace(/\.html?$/i, '') + '.pdf') {
+  const browser = await puppeteer.launch({ executablePath: findChrome(), acceptInsecureCerts: true });
+  try {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(path.resolve(file)).href, { waitUntil: 'networkidle0' });
+    // A number slot after every .toc link ("000" while measuring, so the layout does not move), right-aligned
+    // by default; the guide's own CSS wins because this goes first in <head>.
+    const { ids, ownPage } = await page.evaluate(() => {
+      const st = document.createElement('style');
+      // .toc, or #TOC as written by `pandoc -s --toc`
+      st.textContent = ':is(.toc,#TOC) a{display:flex;justify-content:space-between;gap:1em}.toc-page{font-variant-numeric:tabular-nums}';
+      document.head.prepend(st);
+      const links = [...document.querySelectorAll(':is(.toc,#TOC) a[href^="#"]')];
+      for (const a of links) a.insertAdjacentHTML('beforeend', '<span class="toc-page">000</span>');
+      const ownPage = [...document.styleSheets].some((ss) => { try { return [...ss.cssRules].some((r) => r instanceof CSSPageRule); } catch { return false; } });
+      return { ids: links.map((a) => decodeURIComponent(a.getAttribute('href').slice(1))), ownPage };
+    });
+    // No @page in the guide: A4 with a "page / pages" footer. With @page, the guide's own page setup wins.
+    const opts = ownPage ? { preferCSSPageSize: true, printBackground: true } : {
+      format: 'A4', printBackground: true, displayHeaderFooter: true, headerTemplate: '<span></span>',
+      footerTemplate: '<div style="font-size:8pt;width:100%;text-align:right;margin-right:18mm;color:#64748b"><span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+      margin: { top: '20mm', bottom: '20mm', left: '18mm', right: '18mm' },
+    };
+    const { page: at } = pdfPages(Buffer.from(await page.pdf(opts)));
+    for (const id of new Set(ids.filter((i) => !at[i]))) console.log(T.tocMissing(id));
+    await page.evaluate((nums) => document.querySelectorAll(':is(.toc,#TOC) a[href^="#"] .toc-page').forEach((s, i) => { s.textContent = nums[i]; }),
+      ids.map((i) => (at[i] ? String(at[i]) : '')));
+    const buf = Buffer.from(await page.pdf(opts));
+    fs.writeFileSync(out, buf);
+    console.log(T.pdfDone(path.relative(process.cwd(), out), pdfPages(buf).pages, ids.filter((i) => at[i]).length));
+  } finally { await browser.close(); }
+}
+
 // ---------- main ----------
 (async () => {
+  if (PDF) return buildPdf(...PDF);
   if (!CHECK) fs.mkdirSync(OUT, { recursive: true });
   const shots = cfg.shots.filter((s) => !filters.length || filters.some((t) => s.name.includes(t)));
   if (!shots.length && !LOGIN) { console.log(T.noShots); return; }

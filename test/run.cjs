@@ -241,6 +241,13 @@ const cases = [
     const r = shot('config.frame.json', '--check');
     return r.status === 1 && r.out.includes('f01_iframe_form (checked') && r.out.includes('iframe #nope not found') || r.out;
   }],
+  ['--pdf: page numbers in the table of contents, missing target warned', () => {
+    const pdf = path.join(__dirname, 'output', 'pdf.pdf');
+    fs.rmSync(pdf, { force: true });
+    const r = shot('--pdf', 'pdf.html', 'output/pdf.pdf');
+    return r.status === 0 && fs.existsSync(pdf) && r.out.includes('TOC  #nope: no element with this id')
+      && r.out.includes('4 pages, 3 table of contents entries numbered') || r.out;
+  }],
   ['docs and demo examples still run (--check)', () => {
     const docs = fs.readdirSync(path.join(__dirname, '../docs'))
       .filter((d) => fs.existsSync(path.join(__dirname, '../docs', d, 'example.json'))).map((d) => `docs/${d}`);

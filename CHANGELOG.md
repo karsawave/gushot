@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.9.0 (2026-10-19)
 
+- New `--pdf <guide.html> [out.pdf]`: prints an HTML guide to PDF and fills in the page numbers of its table of contents (links in `.toc`), which Chrome cannot do from CSS. Missing link targets print a `TOC` line. Without `@page` CSS the PDF gets A4 and a page-number footer.
+- Docs: tutorial 7 shows `--pdf`, and its Pandoc row no longer repeats the whole page.
 - Docs: a fill-in first prompt for new users (README, "Using it with an AI agent"; tutorial 5, "Your first guide").
 
 ## 1.8.0 (2026-10-16)
